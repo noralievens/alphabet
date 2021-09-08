@@ -51,7 +51,6 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
                 0, track->name,
                 1, track,
                 -1);
-    player_load_track(mpv, track, 0.0);
     }
 
     on_activate(GTK_APPLICATION(alphabet));

@@ -22,6 +22,7 @@
 
 #define UNUSED __attribute__((unused))
 
+gboolean n;
 mpv_handle* mpv;
 GtkListStore* list;
 
@@ -32,28 +33,26 @@ void on_selection_changed(GtkTreeSelection* selection, GtkTreeModel* model)
     gtk_tree_selection_get_selected(selection, &model, &iter);
     gtk_tree_model_get(model, &iter, 1, &track, -1);
 
-    gdouble position = player_get_position(mpv);
+    gdouble position = 0.0;
+    if (n) position = player_get_position(mpv);
     player_load_track(mpv, track, position);
 }
 
-void on_activate_row(UNUSED GtkTreeView* tree_view, GtkTreePath *path, UNUSED GtkTreeViewColumn *column, GtkTreeModel* model)
+void remove_selected(GtkTreeSelection* selection)
 {
     Track* track;
     GtkTreeIter iter;
-    gtk_tree_model_get_iter(model, &iter, path);
+    GtkTreeModel* model = GTK_TREE_MODEL(list);
+    gtk_tree_selection_get_selected(selection, &model, &iter);
     gtk_tree_model_get(model, &iter, 1, &track, -1);
-
-    gdouble position = player_get_position(mpv);
-    player_load_track(mpv, track, position);
-    /* player_set_position(mpv, position); */
+    gtk_list_store_remove(list, &iter);
+    track_free(track);
 }
-
 
 void add_file(GFile* file)
 {
-    GtkTreeIter iter;
-
     Track* track = track_new(file);
+    GtkTreeIter iter;
 
     track_print(track);
     gtk_list_store_append(list, &iter);
@@ -92,7 +91,7 @@ void show_file_chooser(GtkWindow* window)
         GFile* file = gtk_file_chooser_get_file(chooser);
         add_file(file);
     }
-    g_object_unref (native);
+    g_object_unref(native);
 }
 
 GtkWidget* tree_new(void)
@@ -129,12 +128,12 @@ GtkWidget* tree_new(void)
     return tree;
 }
 
-gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, gpointer data)
+gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tree)
 {
     switch (event->keyval) {
 
         case GDK_KEY_Delete:
-            printf("delete\n");
+            remove_selected(gtk_tree_view_get_selection(tree));
             return TRUE;
 
         case GDK_KEY_a:
@@ -142,7 +141,11 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, gpointer data)
             return TRUE;
 
         case GDK_KEY_q:
-            destroy_handler(window, data);
+            destroy_handler(window, NULL);
+            return TRUE;
+
+        case GDK_KEY_n:
+            n = !n;
             return TRUE;
 
         case GDK_KEY_l:
@@ -183,9 +186,6 @@ void on_activate(GtkApplication* alphabet)
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), NULL);
-    g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
-
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
@@ -193,6 +193,8 @@ void on_activate(GtkApplication* alphabet)
     tree = tree_new();
     gtk_box_pack_start(GTK_BOX(box), tree, FALSE, FALSE, 0);
 
+    g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
+    g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
     gtk_widget_show_all(window);
 }
 

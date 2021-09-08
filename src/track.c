@@ -34,9 +34,9 @@ void track_free(Track* this)
 {
     if (!this) return;
 
-    gtk_widget_destroy(this->box);
+    if (this->box) gtk_widget_destroy(this->box);
     if (this->name) free(this->name);
-    g_object_unref(this->file);
+    /* cannot - must not unref file ??*/
     free(this);
 }
 

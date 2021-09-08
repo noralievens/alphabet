@@ -28,7 +28,7 @@ SOURCES     := $(shell find $(SRC_DIR) -name *.c)
 OBJECTS     := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 
 LIBS         = $(shell pkg-config --libs gtk+-3.0 ) $(shell pkg-config --libs mpv)
-INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) -I/usr/include/mpv
+INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) $(shell pkg-config --cflags mpv) -I/usr/include/mpv
 
 CC           = gcc
 

@@ -10,14 +10,6 @@
 
 #include "../include/window.h"
 
-
-
-void die(int status)
-{
-    /* while (Artist_root) Artist_free(Artist_root); */
-    exit(status);
-}
-
 int main(int argc, char *argv[])
 {
     return window_run(argc - optind, argv);

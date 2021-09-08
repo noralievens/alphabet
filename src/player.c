@@ -22,7 +22,7 @@
 static inline void check_error(int status)
 {
     if (status < 0) {
-        printf("mpv error: %s\n", mpv_error_string(status));
+        fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
     }
 }
 
@@ -37,7 +37,6 @@ void player_seek(mpv_handle* this, gdouble secs)
     char secstr[10];
     sprintf(secstr, "%f", secs);
     const char* cmd[] = {"seek", secstr, NULL};
-    printf("seek: %s\n", secstr);
     check_error(mpv_command(this, cmd));
 }
 
@@ -49,7 +48,6 @@ void player_loop(mpv_handle* this)
 
 void player_set_position(mpv_handle* this, gdouble position)
 {
-    printf("pos: %f\n", position);
     char posstr[10];
     sprintf(posstr, "%f", position);
     const char* cmd[] = {"seek", posstr, "absolute", NULL};
@@ -80,8 +78,8 @@ mpv_handle* player_init(void)
         return NULL;
     }
 
-    int val = 1;
-    check_error(mpv_set_option(mpv, "osc", MPV_FORMAT_FLAG, &val));
+    /* int val = 1; */
+    /* check_error(mpv_set_option(mpv, "osc", MPV_FORMAT_FLAG, &val)); */
 
     // Done setting up options.
     check_error(mpv_initialize(mpv));

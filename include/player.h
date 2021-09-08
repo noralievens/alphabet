@@ -11,6 +11,11 @@
 
 #include <mpv/client.h>
 
+extern void player_toggle(mpv_handle* this);
+
+extern void player_seek(mpv_handle* this, gdouble secs);
+
+extern void player_loop(mpv_handle* this);
 
 extern void player_set_position(mpv_handle* this, gdouble position);
 

@@ -26,10 +26,31 @@ static inline void check_error(int status)
     }
 }
 
+void player_toggle(mpv_handle* this)
+{
+    const char* cmd[] = {"cycle", "pause", NULL};
+    check_error(mpv_command(this, cmd));
+}
+
+void player_seek(mpv_handle* this, gdouble secs)
+{
+    char secstr[10];
+    sprintf(secstr, "%f", secs);
+    const char* cmd[] = {"seek", secstr, NULL};
+    printf("seek: %s\n", secstr);
+    check_error(mpv_command(this, cmd));
+}
+
+void player_loop(mpv_handle* this)
+{
+    const char* cmd[] = {"ab-loop", NULL};
+    check_error(mpv_command(this, cmd));
+}
+
 void player_set_position(mpv_handle* this, gdouble position)
 {
     printf("pos: %f\n", position);
-    char posstr[9];
+    char posstr[10];
     sprintf(posstr, "%f", position);
     const char* cmd[] = {"seek", posstr, "absolute", NULL};
     check_error(mpv_command(this, cmd));

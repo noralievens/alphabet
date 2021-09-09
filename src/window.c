@@ -64,9 +64,9 @@ void remove_selected(GtkTreeSelection* selection)
 
 void add_track(GFile* file)
 {
+    /* TODO validate audio file ! */
     Track* track = track_new(file);
     GtkTreeIter iter;
-    /* track_print(track); */
     gtk_list_store_append(list, &iter);
     gtk_list_store_set(list, &iter, 0, track->name, 1, track, -1);
 }
@@ -89,25 +89,22 @@ gboolean destroy_handler(UNUSED GtkWidget* window, UNUSED GtkApplication* alphab
 
 void show_file_chooser(GtkWindow* window)
 {
-    GtkFileChooserNative *native;
+    GtkFileChooserNative *chsr;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-    gint res;
 
-    native = gtk_file_chooser_native_new("Open File", window, action, "_Add", "_Cancel");
-    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(native), TRUE);
+    chsr = gtk_file_chooser_native_new("Add file", window, action, "_Add", "_Cancel");
+    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(chsr), TRUE);
 
-    res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
-    if (res == GTK_RESPONSE_ACCEPT) {
-        GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
-        GSList* filelist = gtk_file_chooser_get_files(chooser);
+    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(chsr)) == GTK_RESPONSE_ACCEPT) {
 
+        GSList* filelist = gtk_file_chooser_get_files(GTK_FILE_CHOOSER(chsr));
         do add_track(filelist->data);
         while ((filelist = filelist->next));
 
         g_slist_free(filelist);
 
     }
-    g_object_unref(native);
+    g_object_unref(chsr);
 }
 
 gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tree)

@@ -26,6 +26,19 @@ gboolean n;
 mpv_handle* mpv;
 GtkListStore* list;
 
+
+/* void drag_data_received(GtkWidget* self, GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint info, guint time, gpointer user_data)
+{
+    printf("data rcvd\n");
+}
+
+
+gboolean drag_drop(UNUSED GtkWidget* self, UNUSED GdkDragContext* context, UNUSED gint x, UNUSED gint y, UNUSED guint time, UNUSED gpointer user_data)
+{
+    printf("drop\n");
+    return TRUE;
+} */
+
 void on_selection_changed(GtkTreeSelection* selection, GtkTreeModel* model)
 {
     Track* track;
@@ -72,7 +85,8 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
 
 gboolean destroy_handler(GtkWidget* window, UNUSED GtkApplication* alphabet)
 {
-    gtk_window_close(GTK_WINDOW(window));
+    printf("destroy_handler\n");
+    /* gtk_window_close(GTK_WINDOW(window)); */
     /* g_application_quit(G_APPLICATION(alphabet)); */
     return TRUE;
 }
@@ -141,7 +155,7 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
             return TRUE;
 
         case GDK_KEY_q:
-            destroy_handler(window, NULL);
+            gtk_window_close(GTK_WINDOW(window));
             return TRUE;
 
         case GDK_KEY_n:
@@ -190,8 +204,13 @@ void on_activate(GtkApplication* alphabet)
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
 
+    /* static GtkTargetEntry entries[] = {
+        { (gchar*)"GTK_TREE_VIEW", 0, 0 }
+    }; */
+
     tree = tree_new();
-    gtk_box_pack_start(GTK_BOX(box), tree, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), tree, FALSE, FALSE, GDK_ACTION_DEFAULT);
+    /* gtk_tree_view_enable_model_drag_dest(GTK_TREE_VIEW(tree), entries, 1, 0); */
 
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);

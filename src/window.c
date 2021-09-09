@@ -150,7 +150,6 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
             remove_selected(gtk_tree_view_get_selection(tree));
             return TRUE;
 
-
         case (GDK_CONTROL_MASK & GDK_KEY_q):
             gtk_window_close(GTK_WINDOW(window));
             return TRUE;
@@ -192,6 +191,11 @@ void on_clicked_add(UNUSED GtkButton* this, GtkWindow* window)
     show_file_chooser(GTK_WINDOW(window));
 }
 
+void on_clicked_delete(UNUSED GtkButton* this, GtkTreeView* tree)
+{
+    remove_selected(gtk_tree_view_get_selection(tree));
+}
+
 void on_activate(GtkApplication* alphabet)
 {
     GtkWidget* window, * box, * tree, * foo, * button;
@@ -206,13 +210,8 @@ void on_activate(GtkApplication* alphabet)
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
 
-    /* static GtkTargetEntry entries[] = {
-        { (gchar*)"GTK_TREE_VIEW", 0, 0 }
-    }; */
-
     tree = tree_new();
     gtk_box_pack_start(GTK_BOX(box), tree, FALSE, FALSE, GDK_ACTION_DEFAULT);
-    /* gtk_tree_view_enable_model_drag_dest(GTK_TREE_VIEW(tree), entries, 1, 0); */
 
     foo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_box_pack_end(GTK_BOX(box), foo, FALSE, FALSE, 0);
@@ -221,6 +220,9 @@ void on_activate(GtkApplication* alphabet)
     gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_add), window);
 
+    button = gtk_button_new_with_mnemonic("_Delete");
+    gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_delete), tree);
 
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);

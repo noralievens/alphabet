@@ -83,7 +83,7 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
     on_activate(GTK_APPLICATION(alphabet));
 }
 
-gboolean destroy_handler(GtkWidget* window, UNUSED GtkApplication* alphabet)
+gboolean destroy_handler(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
 {
     printf("destroy_handler\n");
     /* gtk_window_close(GTK_WINDOW(window)); */
@@ -150,11 +150,8 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
             remove_selected(gtk_tree_view_get_selection(tree));
             return TRUE;
 
-        case GDK_KEY_a:
-            show_file_chooser(GTK_WINDOW(window));
-            return TRUE;
 
-        case GDK_KEY_q:
+        case (GDK_CONTROL_MASK & GDK_KEY_q):
             gtk_window_close(GTK_WINDOW(window));
             return TRUE;
 
@@ -190,9 +187,14 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
     return FALSE;
 }
 
+void on_clicked_add(UNUSED GtkButton* this, GtkWindow* window)
+{
+    show_file_chooser(GTK_WINDOW(window));
+}
+
 void on_activate(GtkApplication* alphabet)
 {
-    GtkWidget* window, * box, * tree;
+    GtkWidget* window, * box, * tree, * foo, * button;
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "alphabet");
@@ -211,6 +213,14 @@ void on_activate(GtkApplication* alphabet)
     tree = tree_new();
     gtk_box_pack_start(GTK_BOX(box), tree, FALSE, FALSE, GDK_ACTION_DEFAULT);
     /* gtk_tree_view_enable_model_drag_dest(GTK_TREE_VIEW(tree), entries, 1, 0); */
+
+    foo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_box_pack_end(GTK_BOX(box), foo, FALSE, FALSE, 0);
+
+    button = gtk_button_new_with_mnemonic("_Add");
+    gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_add), window);
+
 
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);

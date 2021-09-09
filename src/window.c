@@ -56,30 +56,26 @@ void remove_selected(GtkTreeSelection* selection)
     Track* track;
     GtkTreeIter iter;
     GtkTreeModel* model = GTK_TREE_MODEL(list);
-    gtk_tree_selection_get_selected(selection, &model, &iter);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) return;
     gtk_tree_model_get(model, &iter, 1, &track, -1);
     gtk_list_store_remove(list, &iter);
     track_free(track);
 }
 
-void add_file(GFile* file)
+void add_track(GFile* file)
 {
     Track* track = track_new(file);
     GtkTreeIter iter;
-
-    track_print(track);
+    /* track_print(track); */
     gtk_list_store_append(list, &iter);
     gtk_list_store_set(list, &iter, 0, track->name, 1, track, -1);
 }
 
 void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
 {
-    list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
-
     for (gint i = 0; i < n_files; i++) {
-        add_file(files[i]);
+        add_track(files[i]);
     }
-
     on_activate(GTK_APPLICATION(alphabet));
 }
 
@@ -98,48 +94,20 @@ void show_file_chooser(GtkWindow* window)
     gint res;
 
     native = gtk_file_chooser_native_new("Open File", window, action, "_Add", "_Cancel");
+    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(native), TRUE);
 
-    res = gtk_native_dialog_run (GTK_NATIVE_DIALOG(native));
+    res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
     if (res == GTK_RESPONSE_ACCEPT) {
         GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
-        GFile* file = gtk_file_chooser_get_file(chooser);
-        add_file(file);
+        GSList* filelist = gtk_file_chooser_get_files(chooser);
+
+        do add_track(filelist->data);
+        while ((filelist = filelist->next));
+
+        g_slist_free(filelist);
+
     }
     g_object_unref(native);
-}
-
-GtkWidget* tree_new(void)
-{
-    GtkWidget* tree;
-    GtkTreeSelection* selection;
-    GtkTreeViewColumn* column;
-    GtkCellRenderer* cellrenderer;
-    int id;
-
-    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(list));
-    gtk_tree_view_set_reorderable(GTK_TREE_VIEW(tree), TRUE);
-    /* g_signal_connect(tree, "row-activated", */
-    /*         G_CALLBACK(on_activate_row), GTK_TREE_MODEL(list)); */
-
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
-    g_signal_connect(selection, "changed", G_CALLBACK(on_selection_changed), GTK_TREE_MODEL(list));
-
-    id = 0;
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    cellrenderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
-    gtk_tree_view_column_set_title(column, "Name");
-    gtk_tree_view_column_set_expand(column, TRUE);
-    g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-    gtk_tree_view_column_set_sort_column_id(column, id);
-
-    return tree;
 }
 
 gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tree)
@@ -196,6 +164,40 @@ void on_clicked_delete(UNUSED GtkButton* this, GtkTreeView* tree)
     remove_selected(gtk_tree_view_get_selection(tree));
 }
 
+GtkWidget* tree_new(void)
+{
+    GtkWidget* tree;
+    GtkTreeSelection* selection;
+    GtkTreeViewColumn* column;
+    GtkCellRenderer* cellrenderer;
+    int id;
+
+    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(list));
+    gtk_tree_view_set_reorderable(GTK_TREE_VIEW(tree), TRUE);
+    /* g_signal_connect(tree, "row-activated", */
+    /*         G_CALLBACK(on_activate_row), GTK_TREE_MODEL(list)); */
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
+    g_signal_connect(selection, "changed", G_CALLBACK(on_selection_changed), GTK_TREE_MODEL(list));
+
+    id = 0;
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    cellrenderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_column_set_clickable(column, TRUE);
+    gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
+    gtk_tree_view_column_set_title(column, "Tracks");
+    gtk_tree_view_column_set_expand(column, TRUE);
+    g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+    gtk_tree_view_column_set_sort_column_id(column, id);
+
+    return tree;
+}
+
 void on_activate(GtkApplication* alphabet)
 {
     GtkWidget* window, * box, * tree, * foo, * button;
@@ -205,7 +207,6 @@ void on_activate(GtkApplication* alphabet)
     gtk_container_set_border_width(GTK_CONTAINER(window), 0);
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
@@ -224,7 +225,8 @@ void on_activate(GtkApplication* alphabet)
     gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_delete), tree);
 
-    g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
+    /* gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); */
+    /* g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree); */
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
     gtk_widget_show_all(window);
 }
@@ -240,6 +242,8 @@ int window_run(int argc, char** argv)
     alphabet = gtk_application_new("org.gtk.alphabet", G_APPLICATION_HANDLES_OPEN);
     g_signal_connect(alphabet, "open", G_CALLBACK(on_open), NULL);
     g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), NULL);
+
+    list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
 
     status = g_application_run(G_APPLICATION(alphabet), argc, argv);
 

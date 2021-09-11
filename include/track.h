@@ -13,10 +13,11 @@ typedef struct Track {
     GFile* file;
     gchar* name;
     gchar* uri;
+    gdouble length;
     gint offset;
     gdouble gain;
-    GtkWidget* box;
-    GtkWidget* label;
+    /* GtkWidget* box; */
+    /* GtkWidget* label; */
 } Track;
 
 extern Track* track_new(GFile* file);

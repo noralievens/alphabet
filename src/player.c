@@ -17,8 +17,6 @@
 
 #include "../include/player.h"
 
-
-
 static inline void check_error(int status)
 {
     if (status < 0) {
@@ -26,62 +24,97 @@ static inline void check_error(int status)
     }
 }
 
-void player_toggle(mpv_handle* this)
+static void mpv_print_status(int status)
 {
-    const char* cmd[] = {"cycle", "pause", NULL};
-    check_error(mpv_command(this, cmd));
+    fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
 }
 
-void player_seek(mpv_handle* this, gdouble secs)
+void player_toggle(Player* this)
+{
+    const char* cmd[] = {"cycle", "pause", NULL};
+    check_error(mpv_command(this->mpv, cmd));
+}
+
+void player_seek(Player* this, gdouble secs)
 {
     char secstr[10];
     sprintf(secstr, "%f", secs);
     const char* cmd[] = {"seek", secstr, NULL};
-    check_error(mpv_command(this, cmd));
+    check_error(mpv_command(this->mpv, cmd));
 }
 
-void player_loop(mpv_handle* this)
+void player_loop(Player* this)
 {
+    int status;
     const char* cmd[] = {"ab-loop", NULL};
-    check_error(mpv_command(this, cmd));
+
+    /* cancel loop */
+    if (this->loop_start && this->loop_stop) {
+        this->loop_start = 0.0;
+        this->loop_stop = 0.0;
+
+    /* mark loop stop (B) */
+    } else if (this->loop_start) {
+        this->loop_stop = player_update(this);
+
+    /* mark loop start (A) */
+    } else {
+        this->loop_stop = 0.0;
+        this->loop_start = player_update(this);
+    }
+
+    if ((status = mpv_command(this->mpv, cmd)) < 0) {
+        mpv_print_status(status);
+    }
 }
 
-void player_set_position(mpv_handle* this, gdouble position)
+void player_mark(Player* this)
+{
+    this->marker = player_update(this);
+}
+
+void player_goto(Player* this, gdouble position)
 {
     char posstr[10];
+
+    if (position > this->current->length) position = this->current->length;
+
     sprintf(posstr, "%f", position);
     const char* cmd[] = {"seek", posstr, "absolute", NULL};
-    check_error(mpv_command(this, cmd));
-    /* check_error(mpv_set_property(this, "time-pos", MPV_FORMAT_DOUBLE, &position)); */
+    check_error(mpv_command(this->mpv, cmd));
 }
 
-gdouble player_get_position(mpv_handle* this)
+gdouble player_update(Player* this)
 {
-    gdouble position = 0.0;
-    mpv_get_property(this, "time-pos", MPV_FORMAT_DOUBLE, &position);
-    return position;
+    mpv_get_property(this->mpv, "time-pos", MPV_FORMAT_DOUBLE, &this->position);
+    return this->position;
 }
 
-void player_load_track(mpv_handle* this, Track* track, gdouble position)
+void player_load_track(Player* this, Track* track, gdouble position)
 {
     char posstr[18];
     sprintf(posstr, "start=+%f", position);
     const char *cmd[] = {"loadfile", track->uri, "replace", posstr, NULL};
-    check_error(mpv_command(this, cmd));
+    check_error(mpv_command(this->mpv, cmd));
+    this->current = track;
 }
 
-mpv_handle* player_init(void)
+Player* player_init(void)
 {
-    mpv_handle *mpv = mpv_create();
-    if (!mpv) {
-        printf("failed creating context\n");
+    Player* this = calloc(1, sizeof(Player));
+
+    this->mpv = mpv_create();
+    if (!this->mpv) {
+        fprintf(stderr, "failed creating context\n");
         return NULL;
     }
+    check_error(mpv_initialize(this->mpv));
+    return this;
+}
 
-    /* int val = 1; */
-    /* check_error(mpv_set_option(mpv, "osc", MPV_FORMAT_FLAG, &val)); */
-
-    // Done setting up options.
-    check_error(mpv_initialize(mpv));
-    return mpv;
+void player_free(Player* this)
+{
+    if (!this) return;
+    mpv_terminate_destroy(this->mpv);
+    free(this);
 }

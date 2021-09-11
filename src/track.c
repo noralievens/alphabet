@@ -21,12 +21,15 @@ Track* track_new(GFile* file)
     this->uri = calloc(strlen(uri)+1, sizeof(char));
     strncpy((gchar*)this->uri, uri, strlen(uri));
 
-    this->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    /* this->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0); */
 
-    this->label = gtk_label_new(this->name);
-    gtk_box_pack_start(GTK_BOX(this->box), this->label, FALSE, FALSE, 0);
+    /* this->label = gtk_label_new(this->name); */
+    /* gtk_box_pack_start(GTK_BOX(this->box), this->label, FALSE, FALSE, 0); */
 
-    gtk_widget_show_all(this->box);
+    /* TODO findout track length when loaded */
+    this->length = 300;
+
+    /* gtk_widget_show_all(this->box); */
     return this;
 }
 
@@ -34,7 +37,7 @@ void track_free(Track* this)
 {
     if (!this) return;
 
-    if (this->box) gtk_widget_destroy(this->box);
+    /* if (this->box) gtk_widget_destroy(this->box); */
     if (this->name) free(this->name);
     /* cannot - must not unref file ??*/
     free(this);

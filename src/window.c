@@ -4,7 +4,6 @@
  * @filename    : window.c
  */
 
-
 #include <assert.h>
 #include <errno.h>
 #include <gtk/gtk.h>
@@ -17,27 +16,20 @@
 
 #include "../include/track.h"
 #include "../include/player.h"
+#include "../include/timeline.h"
+#include "../include/transport.h"
 
 #include "../include/window.h"
 
 #define UNUSED __attribute__((unused))
 
 gboolean n;
-mpv_handle* mpv;
+gboolean m;
 GtkListStore* list;
 
-
-/* void drag_data_received(GtkWidget* self, GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint info, guint time, gpointer user_data)
-{
-    printf("data rcvd\n");
-}
+Player* player;
 
 
-gboolean drag_drop(UNUSED GtkWidget* self, UNUSED GdkDragContext* context, UNUSED gint x, UNUSED gint y, UNUSED guint time, UNUSED gpointer user_data)
-{
-    printf("drop\n");
-    return TRUE;
-} */
 
 void on_selection_changed(GtkTreeSelection* selection, GtkTreeModel* model)
 {
@@ -47,8 +39,9 @@ void on_selection_changed(GtkTreeSelection* selection, GtkTreeModel* model)
     gtk_tree_model_get(model, &iter, 1, &track, -1);
 
     gdouble position = 0.0;
-    if (n) position = player_get_position(mpv);
-    player_load_track(mpv, track, position);
+    if (player->marker) position = player->marker;
+    else if (n) position = player_update(player);
+    player_load_track(player, track, position);
 }
 
 void remove_selected(GtkTreeSelection* selection)
@@ -73,6 +66,7 @@ void add_track(GFile* file)
 
 void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
 {
+    printf("n: %i\n", n_files);
     for (gint i = 0; i < n_files; i++) {
         add_track(files[i]);
     }
@@ -124,25 +118,30 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
             return TRUE;
 
         case GDK_KEY_l:
-            player_loop(mpv);
+            player_loop(player);
             return TRUE;
 
         case GDK_KEY_space:
-            player_toggle(mpv);
+            player_toggle(player);
             return TRUE;
 
         case GDK_KEY_Left:
-            player_seek(mpv, -1.0);
+            player_seek(player, -1.0);
             return TRUE;
 
         case GDK_KEY_Right:
-            player_seek(mpv, 1.0);
+            player_seek(player, 1.0);
             return TRUE;
 
-        case GDK_KEY_KP_Enter: /* fallthrough */
+        case GDK_KEY_m:
+        case GDK_KEY_KP_Enter:
+            player_mark(player);
+            return TRUE;
+
         case GDK_KEY_Return:
-            player_set_position(mpv, 0.0);
-            player_toggle(mpv);
+            player_goto(player, 0.0);
+            player_toggle(player);
+            player_mark(player);
             return TRUE;
 
         default:
@@ -183,8 +182,8 @@ GtkWidget* tree_new(void)
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     cellrenderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_column_set_resizable(column, FALSE);
+    /* gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED); */
     gtk_tree_view_column_set_clickable(column, TRUE);
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "Tracks");
@@ -195,9 +194,18 @@ GtkWidget* tree_new(void)
     return tree;
 }
 
+
+gboolean update_timer(GtkWidget* timeline)
+{
+    player_update(player);
+    gtk_widget_queue_draw(timeline);
+    return TRUE;
+}
+
 void on_activate(GtkApplication* alphabet)
 {
-    GtkWidget* window, * box, * tree, * foo, * button;
+    GtkWidget* window, * box, *scrolled;
+    GtkWidget* tree, * foo, * button, * timeline, * transport;
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "alphabet");
@@ -208,8 +216,13 @@ void on_activate(GtkApplication* alphabet)
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
 
+    scrolled = gtk_scrolled_window_new(NULL, NULL);
+    gtk_box_pack_start(GTK_BOX(box), scrolled, TRUE, TRUE, GDK_ACTION_DEFAULT);
+    /* gtk_scrolled_window_set_propagate_natural_height( GTK_SCROLLED_WINDOW(scrolled), TRUE); */
+    /* gtk_scrolled_window_set_propagate_natural_width( GTK_SCROLLED_WINDOW(scrolled), TRUE); */
+
     tree = tree_new();
-    gtk_box_pack_start(GTK_BOX(box), tree, FALSE, FALSE, GDK_ACTION_DEFAULT);
+    gtk_container_add(GTK_CONTAINER(scrolled), tree);
 
     foo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_box_pack_end(GTK_BOX(box), foo, FALSE, FALSE, 0);
@@ -222,10 +235,18 @@ void on_activate(GtkApplication* alphabet)
     gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_delete), tree);
 
-    /* gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); */
-    /* g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree); */
+    timeline = timeline_new(player);
+    gtk_box_pack_start(GTK_BOX(foo), timeline, TRUE, TRUE, 0);
+
+    transport = transport_new(player);
+    gtk_box_pack_start(GTK_BOX(foo),  transport, TRUE, TRUE, 0);
+
+    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
+    g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
     gtk_widget_show_all(window);
+
+    g_timeout_add_full(G_PRIORITY_LOW, 250, G_SOURCE_FUNC(update_timer), timeline, NULL);
 }
 
 int window_run(int argc, char** argv)
@@ -233,8 +254,8 @@ int window_run(int argc, char** argv)
     int status;
     GtkApplication* alphabet;
 
-    mpv = player_init();
-    if (!mpv) exit(EXIT_FAILURE);
+    player = player_init();
+    if (!player) exit(EXIT_FAILURE);
 
     alphabet = gtk_application_new("org.gtk.alphabet", G_APPLICATION_HANDLES_OPEN);
     g_signal_connect(alphabet, "open", G_CALLBACK(on_open), NULL);
@@ -246,6 +267,7 @@ int window_run(int argc, char** argv)
 
     /* g_object_unref(alphabet); */
     g_application_quit(G_APPLICATION(alphabet));
-    mpv_terminate_destroy(mpv);
+
+    player_free(player);
     return status;
 }

@@ -11,19 +11,39 @@
 
 #include <mpv/client.h>
 
-extern void player_toggle(mpv_handle* this);
+typedef enum {
+    PLAY_STATE_PLAY,
+    PLAY_STATE_STOP,
+    PLAY_STATE_PAUSE,
+} PlayState;
 
-extern void player_seek(mpv_handle* this, gdouble secs);
+typedef struct {
+    mpv_handle* mpv;
+    Track* current;
+    gdouble position;
+    gdouble loop_start;
+    gdouble loop_stop;
+    gdouble marker;
+    PlayState play_state;
+} Player;
 
-extern void player_loop(mpv_handle* this);
+extern void player_toggle(Player* this);
 
-extern void player_set_position(mpv_handle* this, gdouble position);
+extern void player_seek(Player* this, gdouble secs);
 
-extern gdouble player_get_position(mpv_handle* this);
+extern void player_loop(Player* this);
 
-extern void player_load_track(mpv_handle* this, Track* track, gdouble position);
+extern void player_mark(Player* this);
 
-extern mpv_handle* player_init(void);
+extern void player_goto(Player* this, gdouble position);
+
+extern gdouble player_update(Player* this);
+
+extern void player_load_track(Player* this, Track* track, gdouble position);
+
+extern Player* player_init(void);
+
+extern void player_free(Player* this);
 
 #endif
 

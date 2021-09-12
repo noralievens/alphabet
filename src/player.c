@@ -101,7 +101,7 @@ double player_update(Player* this)
 
 void player_load_track(Player* this, Track* track, double position)
 {
-    const char *cmd[] = {"loadfile", track->uri, "replace", NULL};
+    const char *cmd[] = {"loadfile", track->uri, NULL};
     check_error(mpv_command(this->mpv, cmd));
     this->current = track;
 

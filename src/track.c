@@ -11,8 +11,6 @@ Track* track_new(const char* name, const char* uri)
 {
     Track* this = malloc(sizeof(Track));
 
-    printf("uri: %s\n", uri);
-
     this->name = calloc(strlen(name)+1, sizeof(char));
     strncpy(this->name, name, strlen(name));
 

@@ -99,6 +99,11 @@ void player_load_track(Player* this, Track* track, double position)
     char posstr[len];
     /* sprintf(posstr, "start=%f", position); */
     g_snprintf(posstr, len, "start=%f", position);
+
+    /* replace comma with dot for mpv - depends on locale */
+    char* p = posstr;
+    while (*p) { *p = *p == ',' ? '.' : *p; p++; }
+
     printf("posstr: %s\n", posstr);
     const char *cmd[] = {"loadfile", track->uri, "replace", posstr, NULL};
     check_error(mpv_command(this->mpv, cmd));
@@ -107,7 +112,7 @@ void player_load_track(Player* this, Track* track, double position)
 
 int player_event_handler(Player* this)
 {
-	while(this->mpv) {
+	while (this->mpv) {
 
 		mpv_event *event = mpv_wait_event(this->mpv, 0);
 

@@ -22,10 +22,10 @@
 #define UNUSED __attribute__((unused))
 
 
-static void on_clicked_previous(UNUSED GtkWidget *button, UNUSED Transport* this)
-{
-    /* TODO */
-}
+/* static void on_clicked_previous(UNUSED GtkWidget *button, UNUSED Transport* this) */
+/* { */
+/*     [> TODO <] */
+/* } */
 
 static void on_clicked_forward(UNUSED GtkWidget *button, Transport* this)
 {
@@ -37,10 +37,10 @@ static void on_clicked_backward(UNUSED GtkWidget *button, Transport* this)
     player_seek(this->player, -1);
 }
 
-static void on_clicked_next(UNUSED GtkWidget *button, UNUSED Transport* this)
-{
-    /* TODO */
-}
+/* static void on_clicked_next(UNUSED GtkWidget *button, UNUSED Transport* this) */
+/* { */
+/*     [> TODO <] */
+/* } */
 
 static void on_clicked_play(UNUSED GtkWidget *button, Transport* this)
 {
@@ -100,7 +100,7 @@ void transport_update(Transport* this)
 
 Transport* transport_new(Player* player)
 {
-    const int spacing = 5;
+    const int spacing = 0;
     GtkWidget* button;
 
     Transport* this = malloc(sizeof(Transport));
@@ -115,35 +115,27 @@ Transport* transport_new(Player* player)
     lower = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, spacing);
     gtk_box_pack_start(GTK_BOX(this->box), lower, FALSE, FALSE, 0);
 
-    button = gtk_button_new_from_icon_name("media-skip-backward-symbolic", ICON_SIZE);
-    gtk_box_pack_start(GTK_BOX(lower), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_previous), this);
-    this->previous = button;
+    /* button = gtk_button_new_from_icon_name("media-skip-backward-symbolic", ICON_SIZE); */
+    /* gtk_box_pack_start(GTK_BOX(lower), button, FALSE, FALSE, 0); */
+    /* g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_previous), this); */
+    /* this->previous = button; */
 
     button = gtk_button_new_from_icon_name("media-seek-backward-symbolic", ICON_SIZE);
-    gtk_box_pack_start(GTK_BOX(lower), button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_backward), this);
     this->backward = button;
 
-    button = gtk_button_new_from_icon_name("media-seek-forward-symbolic", ICON_SIZE);
-    gtk_box_pack_start(GTK_BOX(lower), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_forward), this);
-    this->forward = button;
 
-    button = gtk_button_new_from_icon_name("media-skip-forward-symbolic", ICON_SIZE);
-    gtk_box_pack_start(GTK_BOX(lower), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_next), this);
-    this->next = button;
+    /* button = gtk_button_new_from_icon_name("media-skip-forward-symbolic", ICON_SIZE); */
+    /* gtk_box_pack_start(GTK_BOX(lower), button, FALSE, FALSE, 0); */
+    /* g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_next), this); */
+    /* this->next = button; */
 
-    button = gtk_button_new_from_icon_name("media-playlist-repeat-symbolic-rtl", ICON_SIZE);
+
+    button = gtk_button_new_from_icon_name("media-playback-stop-symbolic", ICON_SIZE);
     gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_loop), this);
-    this->loop = button;
-
-    button = gtk_button_new_from_icon_name("media-playlist-no-repeat-symbolic", ICON_SIZE);
-    gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_loop), this);
-    this->noloop = button;
+    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_stop), this);
+    this->stop = button;
 
     button = gtk_button_new_from_icon_name("media-playback-start-symbolic", ICON_SIZE);
     gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
@@ -155,10 +147,11 @@ Transport* transport_new(Player* player)
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_play), this);
     this->pause = button;
 
-    button = gtk_button_new_from_icon_name("media-playback-stop-symbolic", ICON_SIZE);
+    button = gtk_button_new_from_icon_name("media-seek-forward-symbolic", ICON_SIZE);
     gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_stop), this);
-    this->stop = button;
+    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_forward), this);
+    this->forward = button;
+
 
     button = gtk_button_new_from_icon_name("mail-reply-symbolic", ICON_SIZE);
     gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
@@ -175,6 +168,15 @@ Transport* transport_new(Player* player)
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_rtn), this);
     this->mark = button;
 
+    button = gtk_button_new_from_icon_name("media-playlist-repeat-symbolic-rtl", ICON_SIZE);
+    gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_loop), this);
+    this->loop = button;
+
+    button = gtk_button_new_from_icon_name("media-playlist-no-repeat-symbolic", ICON_SIZE);
+    gtk_box_pack_start(GTK_BOX(upper), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_loop), this);
+    this->noloop = button;
 
     gtk_widget_show_all(this->box);
 

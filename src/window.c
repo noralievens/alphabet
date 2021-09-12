@@ -261,14 +261,16 @@ void on_activate(GtkApplication* alphabet)
 
     gtk_widget_show_all(box);
 
-    timeline = timeline_new(player);
-    gtk_box_pack_start(GTK_BOX(foo), timeline->box, TRUE, TRUE, 0);
-
     counter = counter_new(player);
-    gtk_box_pack_start(GTK_BOX(foo), counter->box, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(foo), counter->box, FALSE, FALSE, spacing*2);
+    /* gtk_widget_set_halign(counter->box, GTK_ALIGN_START); */
+
+    timeline = timeline_new(player);
+    gtk_box_pack_start(GTK_BOX(foo), timeline->box, TRUE, TRUE, spacing*2);
 
     transport = transport_new(player);
-    gtk_box_pack_start(GTK_BOX(foo),  transport->box, TRUE, TRUE, 0);
+    gtk_box_pack_end(GTK_BOX(foo),  transport->box, FALSE, FALSE, spacing*2);
+    /* gtk_widget_set_halign(transport->box, GTK_ALIGN_END); */
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);

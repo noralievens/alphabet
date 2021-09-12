@@ -82,7 +82,7 @@ Transport* transport_new(Player* player)
 {
     GtkWidget* button;
 
-    Transport* this = malloc(sizeof(this));
+    Transport* this = malloc(sizeof(Transport));
     this->player = player;
 
     this->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);

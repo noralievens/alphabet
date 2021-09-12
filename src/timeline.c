@@ -34,9 +34,9 @@ static gboolean on_click(GtkWidget* this, GdkEvent* event, Player* player)
     return TRUE;
 }
 
-
 static gboolean on_draw(GtkWidget* this, cairo_t* cr, Player* player)
 {
+    if (!player->current || !player->current->length) return FALSE;
     gint w = gtk_widget_get_allocated_width(this);
     gint h = gtk_widget_get_allocated_height(this);
     gdouble x;
@@ -92,6 +92,8 @@ GtkWidget* timeline_new(Player* player)
     gtk_widget_add_events(darea, GDK_BUTTON_PRESS_MASK);
     g_signal_connect(darea, "button-press-event", G_CALLBACK(on_click), player);
     g_signal_connect(darea, "draw", G_CALLBACK(on_draw), player);
+
+    gtk_widget_show_all(darea);
 
     return darea;
 }

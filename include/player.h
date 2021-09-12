@@ -25,6 +25,7 @@ typedef struct {
     gdouble loop_stop;
     gdouble marker;
     PlayState play_state;
+    gboolean rtn;
 } Player;
 
 extern void player_toggle(Player* this);

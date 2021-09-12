@@ -35,9 +35,10 @@ CC           = gcc
 CFLAGS       = -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow \
 			   -Wpointer-arith -Wcast-align -Wstrict-prototypes \
 			   -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual \
-			   -Wswitch-default -Wswitch-enum \
+			   -Wswitch-default \
 			   -Wunreachable-code \
 			   -DVERSION=\"$(VERSION)\"
+			   # -Wswitch-enum \
 			   # -Wconversion \
 
 LDFLAGS      =

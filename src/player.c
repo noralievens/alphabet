@@ -99,6 +99,11 @@ void player_load_track(Player* this, Track* track, gdouble position)
     this->current = track;
 }
 
+void foo(gpointer this)
+{
+    printf("foooooooo\n");
+}
+
 Player* player_init(void)
 {
     Player* this = calloc(1, sizeof(Player));
@@ -108,6 +113,9 @@ Player* player_init(void)
         fprintf(stderr, "failed creating context\n");
         return NULL;
     }
+	mpv_observe_property(this->mpv, 0, "core-idle", MPV_FORMAT_FLAG);
+    mpv_observe_property(this->mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
+
     check_error(mpv_initialize(this->mpv));
     return this;
 }

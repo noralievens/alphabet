@@ -9,7 +9,23 @@
 
 #include "../include/player.h"
 
-GtkWidget* transport_new(Player* player);
+typedef struct {
+    Player* player;
+    GtkWidget* box;
+    GtkWidget* previous;
+    GtkWidget* backward;
+    GtkWidget* forward;
+    GtkWidget* next;
+    GtkWidget* play;
+    GtkWidget* pause;
+    GtkWidget* stop;
+    GtkWidget* rtn;
+    GtkWidget* ctd;
+} Transport;
+
+extern Transport* transport_new(Player* player);
+
+extern void transport_update(Transport* this);
 
 #endif
 

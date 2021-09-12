@@ -7,6 +7,8 @@
 #ifndef TIMELINE_H
 #define TIMELINE_H
 
+#include "../include/player.h"
+
 extern GtkWidget* timeline_new(Player* player);
 
 #endif

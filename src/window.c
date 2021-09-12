@@ -23,11 +23,11 @@
 
 #define UNUSED __attribute__((unused))
 
-gboolean n;
 gboolean m;
 GtkListStore* list;
 
 Player* player;
+Transport* transport;
 
 
 
@@ -40,7 +40,7 @@ void on_selection_changed(GtkTreeSelection* selection, GtkTreeModel* model)
 
     gdouble position = 0.0;
     if (player->marker) position = player->marker;
-    else if (n) position = player_update(player);
+    else if (!player->rtn) position = player_update(player);
     player_load_track(player, track, position);
 }
 
@@ -114,7 +114,8 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
             return TRUE;
 
         case GDK_KEY_n:
-            n = !n;
+            player->rtn = !player->rtn;
+            transport_update(transport);
             return TRUE;
 
         case GDK_KEY_l:
@@ -174,7 +175,7 @@ GtkWidget* tree_new(void)
     /*         G_CALLBACK(on_activate_row), GTK_TREE_MODEL(list)); */
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     g_signal_connect(selection, "changed", G_CALLBACK(on_selection_changed), GTK_TREE_MODEL(list));
 
     id = 0;
@@ -195,23 +196,25 @@ GtkWidget* tree_new(void)
 }
 
 
-gboolean update_timer(GtkWidget* timeline)
+void* update_timeline(UNUSED gpointer data)
 {
-    player_update(player);
-    gtk_widget_queue_draw(timeline);
-    return TRUE;
+
+    /* player_update(player); */
+    /* gtk_widget_queue_draw(timeline); */
+    return FALSE;
 }
 
 void on_activate(GtkApplication* alphabet)
 {
     GtkWidget* window, * box, *scrolled;
-    GtkWidget* tree, * foo, * button, * timeline, * transport;
+    GtkWidget* tree, * foo, * button, * timeline;
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "alphabet");
     gtk_container_set_border_width(GTK_CONTAINER(window), 0);
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+    gtk_widget_show_all(window);
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
@@ -234,19 +237,20 @@ void on_activate(GtkApplication* alphabet)
     button = gtk_button_new_with_mnemonic("_Delete");
     gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
     g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_delete), tree);
+    gtk_widget_show_all(box);
 
     timeline = timeline_new(player);
     gtk_box_pack_start(GTK_BOX(foo), timeline, TRUE, TRUE, 0);
 
     transport = transport_new(player);
-    gtk_box_pack_start(GTK_BOX(foo),  transport, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(foo),  transport->box, TRUE, TRUE, 0);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
-    gtk_widget_show_all(window);
 
-    g_timeout_add_full(G_PRIORITY_LOW, 250, G_SOURCE_FUNC(update_timer), timeline, NULL);
+    /* g_timeout_add_full(G_PRIORITY_LOW, 1000, G_SOURCE_FUNC(update_timeline), timeline, NULL); */
+    /* g_timeout_add_full(G_PRIORITY_LOW, 1000, G_SOURCE_FUNC(update_transport), transport, NULL); */
 }
 
 int window_run(int argc, char** argv)

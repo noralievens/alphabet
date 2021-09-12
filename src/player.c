@@ -20,12 +20,6 @@
 
 #define UNUSED __attribute__((unused))
 
-static inline void check_error(int status)
-{
-    if (status < 0) {
-        fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
-    }
-}
 
 static void mpv_print_status(int status)
 {
@@ -34,16 +28,22 @@ static void mpv_print_status(int status)
 
 void player_toggle(Player* this)
 {
+    int status;
     const char* cmd[] = {"cycle", "pause", NULL};
-    check_error(mpv_command(this->mpv, cmd));
+    if ((status = mpv_command(this->mpv, cmd)) < 0) {
+        mpv_print_status(status);
+    }
 }
 
 void player_seek(Player* this, double secs)
 {
+    int status;
     char secstr[10];
     sprintf(secstr, "%f", secs);
     const char* cmd[] = {"seek", secstr, NULL};
-    check_error(mpv_command(this->mpv, cmd));
+    if ((status = mpv_command(this->mpv, cmd)) < 0) {
+        mpv_print_status(status);
+    }
 }
 
 void player_loop(Player* this)
@@ -78,21 +78,20 @@ void player_mark(Player* this)
 
 void player_goto(Player* this, double position)
 {
+    int status;
     if (position > this->current->length) position = this->current->length;
     if (position < 0) position = 0;
 
     char posstr[9];
     g_snprintf(posstr, sizeof(posstr)/sizeof(posstr[0]), "%f", position);
 
-    /* replace comma with dot for mpv - depends on locale */
-    /* char* p = posstr; */
-    /* while (*p) { *p = *p == ',' ? '.' : *p; p++; } */
-    /* printf("posstr: %s\n", posstr); */
-
-    const char* cmd[] = {"seek", posstr, "absolute", NULL};
-    check_error(mpv_command_async(this->mpv, 0, cmd));
+    const char* cmd[] = {"seek", posstr, "absolute+keyframes", NULL};
+    if ((status = mpv_command_async(this->mpv, 0, cmd)) < 0) {
+        mpv_print_status(status);
+    }
 }
 
+/** deprecated */
 double player_update(Player* this)
 {
     mpv_get_property(this->mpv, "time-pos", MPV_FORMAT_DOUBLE, &this->position);
@@ -101,19 +100,26 @@ double player_update(Player* this)
 
 void player_load_track(Player* this, Track* track, double position)
 {
+    int status;
     if (position < 0) position = 0;
+    /* TODO clamp max when length is known*/
+
+    /* compensation for time-gap? */
     if (position) position += 0.050;
 
     char posstr[15];
     g_snprintf(posstr, sizeof(posstr)/sizeof(posstr[0]), "start=%f", position);
 
+    /* replace digit separator, always use dot regardless off locale */
     char *p = posstr;
     while (*p) { *p = *p == ',' ? '.' : *p; p++; }
-    printf("posstr: %s\n", posstr);
+
+    this->current = track;
 
     const char *cmd[] = {"loadfile", track->uri, "replace", posstr, NULL};
-    check_error(mpv_command(this->mpv, cmd));
-    this->current = track;
+    if ((status = mpv_command_async(this->mpv, 0, cmd)) < 0) {
+        mpv_print_status(status);
+    }
 }
 
 int player_event_handler(Player* this)
@@ -155,7 +161,6 @@ int player_event_handler(Player* this)
     return FALSE;
 }
 
-
 void player_set_event_callback(Player* this, void(*event_callback)(void*))
 {
 	mpv_set_wakeup_callback(this->mpv, event_callback, this);
@@ -163,6 +168,7 @@ void player_set_event_callback(Player* this, void(*event_callback)(void*))
 
 Player* player_init()
 {
+    int status;
     Player* this = malloc(sizeof(Player));
 
     this->current = NULL;
@@ -182,7 +188,9 @@ Player* player_init()
     mpv_observe_property(this->mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
 	mpv_observe_property(this->mpv, 0, "length", MPV_FORMAT_DOUBLE);
 
-    check_error(mpv_initialize(this->mpv));
+    if ((status = mpv_initialize(this->mpv)) < 0) {
+        mpv_print_status(status);
+    }
     return this;
 }
 

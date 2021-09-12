@@ -90,7 +90,7 @@ void player_goto(Player* this, double position)
     /* printf("posstr: %s\n", posstr); */
 
     const char* cmd[] = {"seek", posstr, "absolute", NULL};
-    check_error(mpv_command(this->mpv, cmd));
+    check_error(mpv_command_async(this->mpv, 0, cmd));
 }
 
 double player_update(Player* this)

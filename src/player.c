@@ -106,9 +106,10 @@ void player_load_track(Player* this, Track* track, double position)
 
     char posstr[15];
     g_snprintf(posstr, sizeof(posstr)/sizeof(posstr[0]), "start=%f", position);
+
+    char *p = posstr;
+    while (*p) { *p = *p == ',' ? '.' : *p; p++; }
     printf("posstr: %s\n", posstr);
-    /* while (*p) { *p = *p == ',' ? '.' : *p; p++; } */
-    /* printf("posstr: %s\n", posstr); */
 
     const char *cmd[] = {"loadfile", track->uri, "replace", posstr, NULL};
     check_error(mpv_command(this->mpv, cmd));

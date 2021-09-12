@@ -29,6 +29,9 @@ Track* track_new(GFile* file)
     /* TODO findout track length when loaded */
     this->length = 300;
 
+    this->offset = 0;
+    this->gain = 0;
+
     /* gtk_widget_show_all(this->box); */
     return this;
 }

@@ -18,6 +18,7 @@
 #include "../include/player.h"
 #include "../include/timeline.h"
 #include "../include/transport.h"
+#include "../include/counter.h"
 
 #include "../include/window.h"
 
@@ -28,6 +29,8 @@ GtkListStore* list;
 
 Player* player;
 Transport* transport;
+Timeline* timeline;
+Counter* counter;
 
 
 
@@ -115,7 +118,7 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
 
         case GDK_KEY_n:
             player->rtn = !player->rtn;
-            transport_update(transport);
+            /* transport_update(transport); */
             return TRUE;
 
         case GDK_KEY_l:
@@ -196,18 +199,36 @@ GtkWidget* tree_new(void)
 }
 
 
-void* update_timeline(UNUSED gpointer data)
+/**
+ * update the UI elements
+ * no data is passed, just a trigger to update
+ */
+static gboolean update_ui(UNUSED gpointer data)
 {
-
-    /* player_update(player); */
-    /* gtk_widget_queue_draw(timeline); */
+    timeline_update(timeline);
+    counter_update(counter);
+    transport_update(transport);
     return FALSE;
+}
+
+
+/**
+ * event callback
+ *
+ * connect the player callback method to the player event
+ *
+ * called functions must be short and non-blocking
+ */
+static void event_callback(gpointer data)
+{
+	g_idle_add(G_SOURCE_FUNC(player_event_handler), data);
+	g_idle_add(G_SOURCE_FUNC(update_ui), data);
 }
 
 void on_activate(GtkApplication* alphabet)
 {
     GtkWidget* window, * box, *scrolled;
-    GtkWidget* tree, * foo, * button, * timeline;
+    GtkWidget* tree, * foo, * button;
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "alphabet");
@@ -240,7 +261,10 @@ void on_activate(GtkApplication* alphabet)
     gtk_widget_show_all(box);
 
     timeline = timeline_new(player);
-    gtk_box_pack_start(GTK_BOX(foo), timeline, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(foo), timeline->box, TRUE, TRUE, 0);
+
+    counter = counter_new(player);
+    gtk_box_pack_start(GTK_BOX(foo), counter->box, TRUE, TRUE, 0);
 
     transport = transport_new(player);
     gtk_box_pack_start(GTK_BOX(foo),  transport->box, TRUE, TRUE, 0);
@@ -249,8 +273,8 @@ void on_activate(GtkApplication* alphabet)
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
 
-    /* g_timeout_add_full(G_PRIORITY_LOW, 1000, G_SOURCE_FUNC(update_timeline), timeline, NULL); */
-    /* g_timeout_add_full(G_PRIORITY_LOW, 1000, G_SOURCE_FUNC(update_transport), transport, NULL); */
+    /* event_callback will be called whenever player received event */
+    player_set_event_callback(player, event_callback);
 }
 
 int window_run(int argc, char** argv)

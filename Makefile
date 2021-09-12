@@ -21,18 +21,18 @@ BUILD_DIR    = build
 MAN_DIR      = man
 MAN_SECTION  = man1
 
-DEPENDENCIES = libmpdclient
+# DEPENDENCIES = libmpv
 
 
 SOURCES     := $(shell find $(SRC_DIR) -name *.c)
 OBJECTS     := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 
-LIBS         = $(shell pkg-config --libs gtk+-3.0 ) $(shell pkg-config --libs mpv)
+LIBS         = $(shell pkg-config --libs gtk+-3.0 ) $(shell pkg-config --libs mpv) -lm
 INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) $(shell pkg-config --cflags mpv) -I/usr/include/mpv
 
 CC           = gcc
 
-CFLAGS       = -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow \
+CFLAGS       = -g -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow \
 			   -Wpointer-arith -Wcast-align -Wstrict-prototypes \
 			   -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual \
 			   -Wswitch-default \

@@ -117,8 +117,7 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event, GtkTreeView* tr
             return TRUE;
 
         case GDK_KEY_n:
-            player->rtn = !player->rtn;
-            /* transport_update(transport); */
+            gtk_button_clicked(GTK_BUTTON(transport->rtn));
             return TRUE;
 
         case GDK_KEY_l:
@@ -227,6 +226,7 @@ static void event_callback(gpointer data)
 
 void on_activate(GtkApplication* alphabet)
 {
+    const int spacing = 5;
     GtkWidget* window, * box, *scrolled;
     GtkWidget* tree, * foo, * button;
 
@@ -249,15 +249,16 @@ void on_activate(GtkApplication* alphabet)
     gtk_container_add(GTK_CONTAINER(scrolled), tree);
 
     foo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_end(GTK_BOX(box), foo, FALSE, FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(box), foo, FALSE, FALSE, spacing*2);
 
-    button = gtk_button_new_with_mnemonic("_Add");
-    gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_add), window);
+    /* button = gtk_button_new_with_mnemonic("_Add"); */
+    /* gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0); */
+    /* g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_add), window); */
+    /*  */
+    /* button = gtk_button_new_with_mnemonic("_Delete"); */
+    /* gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0); */
+    /* g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_delete), tree); */
 
-    button = gtk_button_new_with_mnemonic("_Delete");
-    gtk_box_pack_start(GTK_BOX(foo), button, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_clicked_delete), tree);
     gtk_widget_show_all(box);
 
     timeline = timeline_new(player);

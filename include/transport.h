@@ -21,6 +21,9 @@ typedef struct {
     GtkWidget* stop;
     GtkWidget* rtn;
     GtkWidget* ctd;
+    GtkWidget* mark;
+    GtkWidget* loop;
+    GtkWidget* noloop;
 } Transport;
 
 extern Transport* transport_new(Player* player);

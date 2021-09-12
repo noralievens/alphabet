@@ -95,8 +95,11 @@ double player_update(Player* this)
 
 void player_load_track(Player* this, Track* track, double position)
 {
-    char posstr[18];
-    sprintf(posstr, "start=%f", position);
+    const size_t len = 15;
+    char posstr[len];
+    /* sprintf(posstr, "start=%f", position); */
+    g_snprintf(posstr, len, "start=%f", position);
+    printf("posstr: %s\n", posstr);
     const char *cmd[] = {"loadfile", track->uri, "replace", posstr, NULL};
     check_error(mpv_command(this->mpv, cmd));
     this->current = track;

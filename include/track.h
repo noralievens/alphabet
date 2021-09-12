@@ -10,17 +10,17 @@
 #include <gtk/gtk.h>
 
 typedef struct Track {
-    GFile* file;
-    gchar* name;
-    gchar* uri;
-    gdouble length;
-    gint offset;
-    gdouble gain;
+    char* file;
+    char* name;
+    char* uri;
+    double length;
+    int offset;
+    double gain;
     /* GtkWidget* box; */
     /* GtkWidget* label; */
 } Track;
 
-extern Track* track_new(GFile* file);
+extern Track* track_new(const char* name, const char* file);
 
 extern void track_free(Track* this);
 

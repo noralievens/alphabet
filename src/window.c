@@ -61,7 +61,7 @@ void remove_selected(GtkTreeSelection* selection)
 void add_track(GFile* file)
 {
     /* TODO validate audio file ! */
-    Track* track = track_new(file);
+    Track* track = track_new(g_file_get_basename(file), g_file_get_path(file));
     GtkTreeIter iter;
     gtk_list_store_append(list, &iter);
     gtk_list_store_set(list, &iter, 0, track->name, 1, track, -1);

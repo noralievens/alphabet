@@ -7,24 +7,17 @@
 #include "../include/track.h"
 
 
-Track* track_new(GFile* file)
+Track* track_new(const char* name, const char* uri)
 {
     Track* this = malloc(sizeof(Track));
 
-    this->file = file;
+    printf("uri: %s\n", uri);
 
-    char* name = g_file_get_basename(file);
     this->name = calloc(strlen(name)+1, sizeof(char));
-    strncpy((gchar*)this->name, name, strlen(name));
+    strncpy(this->name, name, strlen(name));
 
-    char* uri = g_file_get_uri(file);
     this->uri = calloc(strlen(uri)+1, sizeof(char));
-    strncpy((gchar*)this->uri, uri, strlen(uri));
-
-    /* this->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0); */
-
-    /* this->label = gtk_label_new(this->name); */
-    /* gtk_box_pack_start(GTK_BOX(this->box), this->label, FALSE, FALSE, 0); */
+    strncpy(this->uri, uri, strlen(uri));
 
     /* TODO findout track length when loaded */
     this->length = 300;

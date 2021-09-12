@@ -85,9 +85,9 @@ void player_goto(Player* this, double position)
     g_snprintf(posstr, sizeof(posstr)/sizeof(posstr[0]), "%f", position);
 
     /* replace comma with dot for mpv - depends on locale */
-    char* p = posstr;
-    while (*p) { *p = *p == ',' ? '.' : *p; p++; }
-    printf("posstr: %s\n", posstr);
+    /* char* p = posstr; */
+    /* while (*p) { *p = *p == ',' ? '.' : *p; p++; } */
+    /* printf("posstr: %s\n", posstr); */
 
     const char* cmd[] = {"seek", posstr, "absolute", NULL};
     check_error(mpv_command(this->mpv, cmd));
@@ -104,8 +104,12 @@ void player_load_track(Player* this, Track* track, double position)
     const char *cmd[] = {"loadfile", track->uri, "replace", NULL};
     check_error(mpv_command(this->mpv, cmd));
     this->current = track;
+
+    /* FIXME */
+    /* must wait before sending goto command*/
+    /* compensate this in position */
     g_usleep(50000);
-    player_goto(this, position + 0.1);
+    player_goto(this, position + 0.05);
 }
 
 int player_event_handler(Player* this)

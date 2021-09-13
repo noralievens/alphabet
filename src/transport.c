@@ -49,8 +49,8 @@ static void on_clicked_play(UNUSED GtkWidget *button, Transport* this)
 
 static void on_clicked_stop(UNUSED GtkWidget *button, Transport* this)
 {
-    player_toggle(this->player);
-    player_goto(this->player, 0);
+    /* player_goto(this->player, 0); */
+    player_stop(this->player);
 }
 
 static void on_clicked_rtn(UNUSED GtkWidget *button, UNUSED Transport* this)

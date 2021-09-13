@@ -26,7 +26,12 @@ typedef struct {
     double marker;
     PlayState play_state;
     int rtn;
+    double speed;
 } Player;
+
+extern void player_set_speed(Player* this, double speed);
+
+extern void player_stop(Player* this);
 
 extern void player_toggle(Player* this);
 

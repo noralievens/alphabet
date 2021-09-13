@@ -18,6 +18,7 @@
 #include "../include/player.h"
 #include "../include/timeline.h"
 #include "../include/transport.h"
+#include "../include/varispeed.h"
 #include "../include/counter.h"
 
 #include "../include/window.h"
@@ -31,6 +32,7 @@ Player* player;
 Transport* transport;
 Timeline* timeline;
 Counter* counter;
+Varispeed* varispeed;
 
 
 
@@ -267,6 +269,9 @@ void on_activate(GtkApplication* alphabet)
 
     timeline = timeline_new(player);
     gtk_box_pack_start(GTK_BOX(foo), timeline->box, TRUE, TRUE, spacing*2);
+
+    varispeed = varispeed_new(player);
+    gtk_box_pack_start(GTK_BOX(foo), varispeed->box, FALSE, FALSE, spacing*2);
 
     transport = transport_new(player);
     gtk_box_pack_end(GTK_BOX(foo),  transport->box, FALSE, FALSE, spacing*2);

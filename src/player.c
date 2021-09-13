@@ -26,6 +26,26 @@ static void mpv_print_status(int status)
     fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
 }
 
+void player_set_speed(Player* this, gdouble speed)
+{
+    int status;
+    if (speed < 0.1 || speed > 10.0) return;
+    this->speed = speed;
+
+    if ((status = mpv_set_property(this->mpv, "speed", MPV_FORMAT_DOUBLE, &this->speed)) < 0) {
+        mpv_print_status(status);
+    }
+}
+
+void player_stop(Player* this)
+{
+    int status;
+    const char* cmd[] = {"stop", NULL};
+    if ((status = mpv_command(this->mpv, cmd)) < 0) {
+        mpv_print_status(status);
+    }
+}
+
 void player_toggle(Player* this)
 {
     int status;
@@ -169,6 +189,7 @@ void player_set_event_callback(Player* this, void(*event_callback)(void*))
 Player* player_init()
 {
     int status;
+    int pitch_correction = 0;
     Player* this = malloc(sizeof(Player));
 
     this->current = NULL;
@@ -187,6 +208,10 @@ Player* player_init()
 	mpv_observe_property(this->mpv, 0, "core-idle", MPV_FORMAT_FLAG);
     mpv_observe_property(this->mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
 	mpv_observe_property(this->mpv, 0, "length", MPV_FORMAT_DOUBLE);
+
+    if ((status = mpv_set_option(this->mpv, "audio-pitch-correction", MPV_FORMAT_FLAG, &pitch_correction)) < 0) {
+        mpv_print_status(status);
+    }
 
     if ((status = mpv_initialize(this->mpv)) < 0) {
         mpv_print_status(status);

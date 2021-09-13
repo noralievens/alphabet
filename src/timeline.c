@@ -17,10 +17,9 @@
 
 #include "../include/track.h"
 #include "../include/player.h"
+#include "../include/config.h"
 
 #include "../include/timeline.h"
-
-
 
 static gboolean on_click(Timeline* this, GdkEvent* event, GtkWidget* darea)
 {
@@ -88,11 +87,14 @@ void timeline_update(Timeline* this)
 
 Timeline* timeline_new(Player* player)
 {
+    GtkWidget* frame, * darea;
     Timeline* this = malloc(sizeof(Timeline));
-    GtkWidget* darea;
 
     this->player = player;
     this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+    frame = gtk_frame_new(NULL);
+    gtk_box_pack_start(GTK_BOX(this->box), frame, TRUE, TRUE, 0);
 
     assert(gdk_rgba_parse(&this->position, "rgba(128,128,128,0.5)")
             && gdk_rgba_parse(&this->loop, "rgba(0,128,0,0.25)")
@@ -100,7 +102,9 @@ Timeline* timeline_new(Player* player)
             && "allocate timeline colors");
 
     darea = gtk_drawing_area_new();
-    gtk_box_pack_start(GTK_BOX(this->box), darea, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(frame), darea);
+    gtk_widget_set_size_request(darea, 100, -1);
+    gtk_widget_set_hexpand(darea, TRUE);
 
     gtk_widget_add_events(darea, GDK_BUTTON_PRESS_MASK);
     g_signal_connect_swapped(darea, "button-press-event", G_CALLBACK(on_click), this);
@@ -110,4 +114,3 @@ Timeline* timeline_new(Player* player)
 
     return this;
 }
-

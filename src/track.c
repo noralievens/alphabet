@@ -6,7 +6,6 @@
 
 #include "../include/track.h"
 
-
 Track* track_new(const char* name, const char* uri)
 {
     Track* this = malloc(sizeof(Track));
@@ -19,6 +18,8 @@ Track* track_new(const char* name, const char* uri)
 
     /* TODO findout track length when loaded */
     this->length = 300;
+    this->duration = calloc(9, sizeof(char));
+    sprintf(this->duration, "5:00");
 
     this->offset = 0;
     this->gain = 0;

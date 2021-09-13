@@ -14,6 +14,7 @@ typedef struct Track {
     char* name;
     char* uri;
     double length;
+    char* duration;
     int offset;
     double gain;
     /* GtkWidget* box; */

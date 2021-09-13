@@ -44,15 +44,20 @@ void player_stop(Player* this)
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
         mpv_print_status(status);
     }
+    player_load_track(this, this->current, 0);
+    player_toggle(this);
 }
 
 void player_toggle(Player* this)
 {
+    /* FIXME find proper play - pause methods */
     int status;
+
     const char* cmd[] = {"cycle", "pause", NULL};
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
         mpv_print_status(status);
     }
+    if (this->rtn) player_goto(this, 0);
 }
 
 void player_seek(Player* this, double secs)

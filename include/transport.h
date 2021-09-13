@@ -11,7 +11,8 @@
 
 typedef struct {
     Player* player;
-    GtkWidget* box;
+    GtkWidget* box_movement;
+    GtkWidget* box_control;
     GtkWidget* previous;
     GtkWidget* backward;
     GtkWidget* forward;

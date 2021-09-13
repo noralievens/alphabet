@@ -15,6 +15,7 @@
 #include <mpv/client.h>
 
 #include "../include/player.h"
+#include "../include/config.h"
 
 #include "../include/varispeed.h"
 
@@ -26,7 +27,7 @@ static void on_value_changed(Varispeed* this, GtkSpinButton *spin_button)
     player_set_speed(this->player, value);
 }
 
-void varispeed_update(Varispeed* this)
+void varispeed_update(UNUSED Varispeed* this)
 {
 }
 
@@ -36,7 +37,7 @@ Varispeed* varispeed_new(Player* player)
 
     this->player = player;
 
-    this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, MARGIN);
 
     /* this->switch = gtk_switch_new( */
 
@@ -46,7 +47,5 @@ Varispeed* varispeed_new(Player* player)
     g_signal_connect_swapped(this->spin, "value-changed", G_CALLBACK(on_value_changed), this);
 
     gtk_widget_show_all(this->box);
-
-
     return this;
 }

@@ -31,18 +31,27 @@ void counter_update(Counter* this)
     seconds *= seconds < 0 ? -1 : 1;
     sprintf(count, "<big><tt>%d:%.2d.%.3d</tt></big>", (int)(seconds/60), (int)(fmod(seconds,60)), (int)(fmod(seconds,1)*1000));
     gtk_label_set_markup(GTK_LABEL(this->label), count);
+    /* FIXME: setting label emits size-allocate !!! check by connect signal and start playback*/
 }
 
 Counter* counter_new(Player* player)
 {
+    GtkWidget* frame;
     Counter* this = malloc(sizeof(Counter));
 
     this->player = player;
-    this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    this->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     this->position = 0;
 
+    frame = gtk_frame_new(NULL);
+    gtk_box_pack_start(GTK_BOX(this->box), frame, TRUE, TRUE, 0);
+
     this->label = gtk_label_new("0:00.00");
-    gtk_box_pack_start(GTK_BOX(this->box), this->label, FALSE, FALSE, 0);
+    gtk_label_set_ellipsize(GTK_LABEL(this->label), PANGO_ELLIPSIZE_END);
+    gtk_container_add(GTK_CONTAINER(frame), this->label);
+    /* gtk_widget_set_margin_start(this->label, MARGIN); */
+    /* gtk_widget_set_margin_end(this->label, MARGIN); */
+    gtk_widget_set_size_request(frame, 100, -1);
 
     gtk_widget_show_all(this->box);
 

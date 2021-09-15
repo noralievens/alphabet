@@ -14,6 +14,10 @@
 #include <unistd.h>
 #include <signal.h>
 
+#ifdef MAC_INTEGRATION
+#include <gtkosxapplication.h>
+#endif
+
 #include "../include/config.h"
 #include "../include/track.h"
 #include "../include/player.h"
@@ -250,6 +254,11 @@ void on_activate(GtkApplication* alphabet)
 {
     GtkWidget* window, * box, *scrolled;
     GtkWidget* tree, * bar, * button;
+
+#ifdef MAC_INTEGRATION
+    GtkosxApplication* osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+#endif
+
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "Alphabet");

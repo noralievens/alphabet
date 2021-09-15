@@ -263,7 +263,7 @@ void on_activate(GtkApplication* alphabet)
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "Alphabet");
     gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-    gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
+    gtk_window_set_default_size(GTK_WINDOW(window), 640, 320);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
 

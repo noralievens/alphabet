@@ -34,6 +34,8 @@ MAN_SECTION  = man1
 
 OS = $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
 
+CC           = gcc
+
 SOURCES     := $(shell find $(SRC_DIR) -name *.c)
 OBJECTS     := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 
@@ -45,7 +47,7 @@ INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) \
 			   $(shell pkg-config --cflags mpv) \
 			   -I/usr/include/mpv
 
-CC           = gcc
+
 
 CFLAGS       = -g -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow \
 			   -Wpointer-arith -Wcast-align -Wstrict-prototypes \
@@ -61,12 +63,13 @@ LDFLAGS      =
 # MAC OSX
 ifeq ($(OS),Darwin)
 
-	CFLAGS  += $(shell pkg-config --cflags gtk-mac-integration-gtk3) \
-			   -DMAC_INTEGRATION
+LIBS        += $(shell pkg-config --libs gtk-mac-integration-gtk3)
+CFLAGS      += -DMAC_INTEGRATION
 
-	LDFLAGS += $(shell pkg-config --cflags gtk-mac-integration-gtk3) \
+INCLUDES    += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
 
 endif
+
 
 
 

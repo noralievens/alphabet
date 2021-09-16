@@ -89,6 +89,21 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
     on_activate(GTK_APPLICATION(alphabet));
 }
 
+#ifdef MAC_INTEGRATION
+gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
+{
+    Track* track = track_new(path, path);
+    GtkTreeIter iter;
+    gtk_list_store_append(list, &iter);
+    gtk_list_store_set(list, &iter,
+            TREE_COLUMN_NAME, track->name,
+            TREE_COLUMN_DURATION, track->duration,
+            TREE_COLUMN_DATA, track,
+            -1);
+    return TRUE;
+}
+#endif
+
 gboolean destroy_handler(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
 {
     printf("destroy_handler\n");
@@ -258,7 +273,6 @@ void on_activate(GtkApplication* alphabet)
     GtkosxApplication* osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
 
-
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "Alphabet");
     gtk_container_set_border_width(GTK_CONTAINER(window), 0);
@@ -307,12 +321,18 @@ void on_activate(GtkApplication* alphabet)
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), transport->box_control);
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), transport->box_movement);
 
-    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree);
+    /* gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); */
+    /* g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), tree); */
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), alphabet);
 
     /* event_callback will be called whenever player received event */
     player_set_event_callback(player, event_callback);
+
+#ifdef MAC_INTEGRATION
+    g_signal_connect(alphabet, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
+    gtkosx_application_set_use_quartz_accelerators(osx, TRUE);
+    gtkosx_application_ready(osx);
+#endif
 }
 
 int window_run(int argc, char** argv)
@@ -324,8 +344,9 @@ int window_run(int argc, char** argv)
     if (!player) exit(EXIT_FAILURE);
 
     alphabet = gtk_application_new("org.gtk.alphabet", G_APPLICATION_HANDLES_OPEN);
-    g_signal_connect(alphabet, "open", G_CALLBACK(on_open), NULL);
     g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), NULL);
+    g_signal_connect(alphabet, "open", G_CALLBACK(on_open), NULL);
+
 
     list = gtk_list_store_new(TREE_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER);
 

@@ -38,12 +38,10 @@ SOURCES     := $(shell find $(SRC_DIR) -name *.c)
 OBJECTS     := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 
 LIBS         = $(shell pkg-config --libs gtk+-3.0 ) \
-			   $(shell pkg-config --libs gtk-mac-integration-gtk3) \
 			   $(shell pkg-config --libs mpv) \
 			   -lm
 
 INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) \
-			   $(shell pkg-config --cflags gtk-mac-integration-gtk3) \
 			   $(shell pkg-config --cflags mpv) \
 			   -I/usr/include/mpv
 
@@ -58,12 +56,19 @@ CFLAGS       = -g -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow \
 			   # -Wswitch-enum \
 			   # -Wconversion
 
+LDFLAGS      =
+
+# MAC OSX
 ifeq ($(OS),Darwin)
-	CFLAGS += -DMAC_INTEGRATION
+
+	CFLAGS  += $(shell pkg-config --cflags gtk-mac-integration-gtk3) \
+			   -DMAC_INTEGRATION
+
+	LDFLAGS += $(shell pkg-config --cflags gtk-mac-integration-gtk3) \
+
 endif
 
 
-LDFLAGS      =
 
 # debian dpkg control file
 define DEBIAN_CONTROL

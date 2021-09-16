@@ -49,7 +49,7 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
 #ifdef MAC_INTEGRATION
 gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
 {
-    tracklist_add_uri(path, path);
+    tracklist_add_uri(tracklist, path);
 }
 #endif
 

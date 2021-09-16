@@ -32,12 +32,20 @@ MAN_SECTION  = man1
 
 # DEPENDENCIES = libmpv
 
+OS = $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
 
 SOURCES     := $(shell find $(SRC_DIR) -name *.c)
 OBJECTS     := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 
-LIBS         = $(shell pkg-config --libs gtk+-3.0 ) $(shell pkg-config --libs mpv) -lm
-INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) $(shell pkg-config --cflags mpv) -I/usr/include/mpv
+LIBS         = $(shell pkg-config --libs gtk+-3.0 ) \
+			   $(shell pkg-config --libs gtk-mac-integration-gtk3) \
+			   $(shell pkg-config --libs mpv) \
+			   -lm
+
+INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) \
+			   $(shell pkg-config --cflags gtk-mac-integration-gtk3) \
+			   $(shell pkg-config --cflags mpv) \
+			   -I/usr/include/mpv
 
 CC           = gcc
 
@@ -48,7 +56,12 @@ CFLAGS       = -g -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow \
 			   -Wunreachable-code \
 			   -DVERSION=\"$(VERSION)\"
 			   # -Wswitch-enum \
-			   # -Wconversion \
+			   # -Wconversion
+
+ifeq ($(OS),Darwin)
+	CFLAGS += -DMAC_INTEGRATION
+endif
+
 
 LDFLAGS      =
 

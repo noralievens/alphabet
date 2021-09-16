@@ -26,7 +26,6 @@
 #include "../include/varispeed.h"
 #include "../include/counter.h"
 
-gboolean m;
 GtkListStore* list;
 
 Player* player;

@@ -1,107 +1,28 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
  * @created     : 16/09/2021
- * @filename    : tree.c
+ * @filename    : tracklist.c
  */
 
 #include <assert.h>
 #include <errno.h>
 #include <gtk/gtk.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <signal.h>
 
 #include "../include/config.h"
-#include "../include/track.h"
 #include "../include/player.h"
+#include "../include/track.h"
 
 #include "../include/tracklist.h"
 
 /* static gboolean (*GtkTreeViewSearchEqualFunc) (GtkTreeModel *model, gint column, const gchar *key, GtkTreeIter *iter, gpointer search_data) */
 
-static void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection)
-{
-    Track* track;
-    GtkTreeIter iter;
-    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
-
-    gtk_tree_selection_get_selected(selection, &model, &iter);
-    if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;
-    gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
-
-    gdouble position = 0.0;
-    if (this->player->marker) position = this->player->marker;
-    else if (!this->player->rtn) position = player_update(this->player);
-    player_load_track(this->player, track, position);
-}
-
-void tracklist_remove_selected(Tracklist* this)
-{
-    GtkTreeSelection* selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
-    Track* track;
-    GtkTreeIter iter;
-    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) return;
-    gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
-    gtk_list_store_remove(this->list, &iter);
-    track_free(track);
-}
-
-void tracklist_add_track(Tracklist* this, Track* track)
-{
-    GtkTreeIter iter;
-    gtk_list_store_append(this->list, &iter);
-    gtk_list_store_set(
-            this->list, &iter,
-            TRACKLIST_COLUMN_NAME, track->name,
-            TRACKLIST_COLUMN_DURATION, track->duration,
-            TRACKLIST_COLUMN_DATA, track,
-            -1);
-}
-
-void tracklist_add_file(Tracklist* this, GFile* file)
-{
-    const char* type;
-    char* name, * path;
-    GError *err = NULL;
-    GFileInfo* info;
-
-    info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
-            G_FILE_QUERY_INFO_NONE, NULL, &err);
-
-    /* file-open errors - report and cancel */
-    if (err) {
-        g_printerr("%s\n", err->message);
-        g_error_free(err);
-        return;
-    }
-
-    name = g_file_get_basename(file);
-    path = g_file_get_path(file);
-
-    /* mime type not readable ?? */
-    if (!(type = g_file_info_get_content_type(info))) {
-        g_printerr("Error getting mimetype for file \"%s\"\n", path);
-        goto finish;
-    }
-
-    /* invalid file*/
-    if (!g_strstr_len(type, 5, "audio")) {
-        g_printerr("Error loading file \"%s\": Not and audio file\n", path);
-        goto finish;
-    }
-
-    Track* track = track_new(name, path);
-    tracklist_add_track(this, track);
-
-finish:
-    g_object_unref(info);
-    g_free(name);
-    g_free(path);
-}
+static void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection);
 
 Tracklist* tracklist_new(Player* player)
 {
@@ -165,6 +86,71 @@ void tracklist_init(Tracklist* this)
     gtk_widget_show_all(this->tree);
 }
 
+void tracklist_add_track(Tracklist* this, Track* track)
+{
+    GtkTreeIter iter;
+    gtk_list_store_append(this->list, &iter);
+    gtk_list_store_set(
+            this->list, &iter,
+            TRACKLIST_COLUMN_NAME, track->name,
+            TRACKLIST_COLUMN_DURATION, track->duration,
+            TRACKLIST_COLUMN_DATA, track,
+            -1);
+}
+
+void tracklist_add_file(Tracklist* this, GFile* file)
+{
+    const char* type;
+    char* name, * path;
+    GError *err = NULL;
+    GFileInfo* info;
+
+    info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+            G_FILE_QUERY_INFO_NONE, NULL, &err);
+
+    /* file-open errors - report and cancel */
+    if (err) {
+        g_printerr("%s\n", err->message);
+        g_error_free(err);
+        return;
+    }
+
+    name = g_file_get_basename(file);
+    path = g_file_get_path(file);
+
+    /* mime type not readable ?? */
+    if (!(type = g_file_info_get_content_type(info))) {
+        g_printerr("Error getting mimetype for file \"%s\"\n", path);
+        goto finish;
+    }
+
+    /* invalid file*/
+    if (!g_strstr_len(type, 5, "audio")) {
+        g_printerr("Error loading file \"%s\": Not and audio file\n", path);
+        goto finish;
+    }
+
+    Track* track = track_new(name, path);
+    tracklist_add_track(this, track);
+
+finish:
+    g_object_unref(info);
+    g_free(name);
+    g_free(path);
+}
+
+void tracklist_remove_selected(Tracklist* this)
+{
+    GtkTreeSelection* selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
+    Track* track;
+    GtkTreeIter iter;
+    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) return;
+    gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
+    gtk_list_store_remove(this->list, &iter);
+    track_free(track);
+}
+
 void tracklist_free(Tracklist* this)
 {
     if (!this) return;
@@ -182,8 +168,29 @@ void tracklist_free(Tracklist* this)
         gtk_list_store_remove(this->list, &iter);
     }
 
-
     gtk_widget_destroy(GTK_WIDGET(this->tree));
     g_object_unref(this->list);
     g_free(this);
+}
+
+
+/*******************************************************************************
+ * static functions
+ *
+ */
+
+void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection)
+{
+    Track* track;
+    GtkTreeIter iter;
+    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
+
+    gtk_tree_selection_get_selected(selection, &model, &iter);
+    if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;
+    gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
+
+    gdouble position = 0.0;
+    if (this->player->marker) position = this->player->marker;
+    else if (!this->player->rtn) position = player_update(this->player);
+    player_load_track(this->player, track, position);
 }

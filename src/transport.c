@@ -6,82 +6,31 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <gtk/gtk.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <mpv/client.h>
 
 #include "../include/config.h"
 #include "../include/player.h"
 
 #include "../include/transport.h"
 
-static void on_clicked_forward(UNUSED GtkWidget *button, Transport* this)
-{
-    player_seek(this->player, 1);
-}
 
-static void on_clicked_backward(UNUSED GtkWidget *button, Transport* this)
-{
-    player_seek(this->player, -1);
-}
+static void on_clicked_forward(UNUSED GtkWidget *button, Transport* this);
 
-static void on_clicked_play(UNUSED GtkWidget *button, Transport* this)
-{
-    player_toggle(this->player);
-}
+static void on_clicked_backward(UNUSED GtkWidget *button, Transport* this);
 
-static void on_clicked_stop(UNUSED GtkWidget *button, Transport* this)
-{
-    player_stop(this->player);
-}
+static void on_clicked_play(UNUSED GtkWidget *button, Transport* this);
 
-static void on_clicked_rtn(UNUSED GtkWidget *button, UNUSED Transport* this)
-{
-    if (!this->player->marker) this->player->rtn = !this->player->rtn;
-    this->player->marker = 0;
-    transport_update(this);
-}
+static void on_clicked_stop(UNUSED GtkWidget *button, Transport* this);
 
-static void on_clicked_loop(UNUSED GtkWidget *button, UNUSED Transport* this)
-{
-    player_loop(this->player);
-}
+static void on_clicked_rtn(UNUSED GtkWidget *button, UNUSED Transport* this);
 
-void transport_update(Transport* this)
-{
-    if (this->player->rtn && !this->player->marker) {
-        gtk_widget_show(this->rtn);
-        gtk_widget_hide(this->ctd);
-        gtk_widget_hide(this->mark);
-    } else if (this->player->marker) {
-        gtk_widget_hide(this->rtn);
-        gtk_widget_hide(this->ctd);
-        gtk_widget_show(this->mark);
-    } else {
-        gtk_widget_hide(this->rtn);
-        gtk_widget_show(this->ctd);
-        gtk_widget_hide(this->mark);
-    }
+static void on_clicked_loop(UNUSED GtkWidget *button, UNUSED Transport* this);
 
-    if (this->player->loop_start && this->player->loop_stop) {
-        gtk_widget_show(this->loop);
-        gtk_widget_hide(this->noloop);
-    } else {
-        gtk_widget_hide(this->loop);
-        gtk_widget_show(this->noloop);
-    }
-
-    if (this->player->play_state == PLAY_STATE_PLAY) {
-        gtk_widget_show(this->pause);
-        gtk_widget_hide(this->play);
-    } else {
-        gtk_widget_hide(this->pause);
-        gtk_widget_show(this->play);
-    }
-}
 
 Transport* transport_new(Player* player)
 {
@@ -150,4 +99,85 @@ Transport* transport_new(Player* player)
     transport_update(this);
 
     return this;
+}
+
+void transport_update(Transport* this)
+{
+    if (this->player->rtn && !this->player->marker) {
+        gtk_widget_show(this->rtn);
+        gtk_widget_hide(this->ctd);
+        gtk_widget_hide(this->mark);
+    } else if (this->player->marker) {
+        gtk_widget_hide(this->rtn);
+        gtk_widget_hide(this->ctd);
+        gtk_widget_show(this->mark);
+    } else {
+        gtk_widget_hide(this->rtn);
+        gtk_widget_show(this->ctd);
+        gtk_widget_hide(this->mark);
+    }
+
+    if (this->player->loop_start && this->player->loop_stop) {
+        gtk_widget_show(this->loop);
+        gtk_widget_hide(this->noloop);
+    } else {
+        gtk_widget_hide(this->loop);
+        gtk_widget_show(this->noloop);
+    }
+
+    if (this->player->play_state == PLAY_STATE_PLAY) {
+        gtk_widget_show(this->pause);
+        gtk_widget_hide(this->play);
+    } else {
+        gtk_widget_hide(this->pause);
+        gtk_widget_show(this->play);
+    }
+}
+
+
+
+void transport_free(Transport* this)
+{
+    if (!this) return;
+    gtk_widget_destroy(this->box_control);
+    gtk_widget_destroy(this->box_movement);
+    g_free(this);
+}
+
+
+/*******************************************************************************
+ * static functions
+ *
+ */
+
+void on_clicked_forward(UNUSED GtkWidget *button, Transport* this)
+{
+    player_seek(this->player, 1);
+}
+
+void on_clicked_backward(UNUSED GtkWidget *button, Transport* this)
+{
+    player_seek(this->player, -1);
+}
+
+void on_clicked_play(UNUSED GtkWidget *button, Transport* this)
+{
+    player_toggle(this->player);
+}
+
+void on_clicked_stop(UNUSED GtkWidget *button, Transport* this)
+{
+    player_stop(this->player);
+}
+
+void on_clicked_rtn(UNUSED GtkWidget *button, UNUSED Transport* this)
+{
+    if (!this->player->marker) this->player->rtn = !this->player->rtn;
+    this->player->marker = 0;
+    transport_update(this);
+}
+
+void on_clicked_loop(UNUSED GtkWidget *button, UNUSED Transport* this)
+{
+    player_loop(this->player);
 }

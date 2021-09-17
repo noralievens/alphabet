@@ -7,39 +7,40 @@
 #include <assert.h>
 #include <errno.h>
 #include <gtk/gtk.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <signal.h>
 
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif
 
-#include "../include/track.h"
 #include "../include/config.h"
 #include "../include/config.h"
-#include "../include/tracklist.h"
+#include "../include/counter.h"
 #include "../include/player.h"
 #include "../include/timeline.h"
+#include "../include/track.h"
+#include "../include/tracklist.h"
 #include "../include/transport.h"
 #include "../include/varispeed.h"
-#include "../include/counter.h"
-GtkosxApplication* osx;
-Player* player;
-Transport* transport;
-Timeline* timeline;
+
 Counter* counter;
-Varispeed* varispeed;
+Player* player;
+Timeline* timeline;
 Tracklist* tracklist;
+Transport* transport;
+Varispeed* varispeed;
 
 static void on_activate(GtkApplication* alphabet);
 
 void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
 {
     for (gint i = 0; i < n_files; i++) {
+        /* must - cannot unref file?? */
         tracklist_add_file(tracklist, files[i]);
     }
     on_activate(GTK_APPLICATION(alphabet));
@@ -50,6 +51,7 @@ gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer 
 {
     GFile* file = g_file_new_for_path(path);
     tracklist_add_file(tracklist, file);
+    g_object_unref(file);
     return TRUE;
 }
 #endif
@@ -58,6 +60,7 @@ gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
 {
     printf("destroy_handler\n");
     tracklist_free(tracklist);
+    transport_free(transport);
     /* player_free(player); */
     /* gtk_window_close(GTK_WINDOW(window)); */
     /* g_application_quit(G_APPLICATION(alphabet)); */
@@ -161,7 +164,9 @@ void on_activate(GtkApplication* alphabet)
     GtkWidget* window, * box, *scrolled;
     GtkWidget* bar, * button;
 
-
+#ifdef MAC_INTEGRATION
+    GtkosxApplication* osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+#endif
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "Alphabet");
@@ -218,7 +223,7 @@ void on_activate(GtkApplication* alphabet)
     player_set_event_callback(player, event_callback);
 
 #ifdef MAC_INTEGRATION
-    g_signal_connect(osx, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
+    g_signal_connect(alphabet, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
     gtkosx_application_set_use_quartz_accelerators(osx, TRUE);
     gtkosx_application_ready(osx);
 #endif
@@ -240,10 +245,6 @@ int window_run(int argc, char** argv)
 
     g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), tracklist->list);
     g_signal_connect(alphabet, "open", G_CALLBACK(on_open), tracklist->list);
-
-#ifdef MAC_INTEGRATION
-    osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-#endif
 
     status = g_application_run(G_APPLICATION(alphabet), argc, argv);
 

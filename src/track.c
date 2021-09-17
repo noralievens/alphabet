@@ -24,7 +24,6 @@ Track* track_new(const char* name, const char* uri)
     this->offset = 0;
     this->gain = 0;
 
-    /* gtk_widget_show_all(this->box); */
     return this;
 }
 
@@ -32,7 +31,6 @@ void track_free(Track* this)
 {
     if (!this) return;
 
-    /* if (this->box) gtk_widget_destroy(this->box); */
     if (this->name) free(this->name);
     /* cannot - must not unref file ??*/
     free(this);

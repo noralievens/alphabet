@@ -27,7 +27,7 @@
 #include "../include/transport.h"
 #include "../include/varispeed.h"
 #include "../include/counter.h"
-
+GtkosxApplication* osx;
 Player* player;
 Transport* transport;
 Timeline* timeline;
@@ -39,7 +39,6 @@ static void on_activate(GtkApplication* alphabet);
 
 void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
 {
-    printf("n: %i\n", n_files);
     for (gint i = 0; i < n_files; i++) {
         tracklist_add_file(tracklist, files[i]);
     }
@@ -162,9 +161,7 @@ void on_activate(GtkApplication* alphabet)
     GtkWidget* window, * box, *scrolled;
     GtkWidget* bar, * button;
 
-#ifdef MAC_INTEGRATION
-    GtkosxApplication* osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-#endif
+
 
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "Alphabet");
@@ -221,7 +218,7 @@ void on_activate(GtkApplication* alphabet)
     player_set_event_callback(player, event_callback);
 
 #ifdef MAC_INTEGRATION
-    g_signal_connect(alphabet, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
+    g_signal_connect(osx, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
     gtkosx_application_set_use_quartz_accelerators(osx, TRUE);
     gtkosx_application_ready(osx);
 #endif
@@ -243,6 +240,10 @@ int window_run(int argc, char** argv)
 
     g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), tracklist->list);
     g_signal_connect(alphabet, "open", G_CALLBACK(on_open), tracklist->list);
+
+#ifdef MAC_INTEGRATION
+    osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+#endif
 
     status = g_application_run(G_APPLICATION(alphabet), argc, argv);
 

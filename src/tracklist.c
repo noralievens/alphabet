@@ -50,7 +50,7 @@ void tracklist_remove_selected(Tracklist* this)
     track_free(track);
 }
 
-void tracklist_add(Tracklist* this, Track* track)
+void tracklist_add_track(Tracklist* this, Track* track)
 {
     GtkTreeIter iter;
     gtk_list_store_append(this->list, &iter);
@@ -64,16 +64,43 @@ void tracklist_add(Tracklist* this, Track* track)
 
 void tracklist_add_file(Tracklist* this, GFile* file)
 {
-    /* TODO validate audio file ! */
-    Track* track = track_new(g_file_get_basename(file), g_file_get_path(file));
-    tracklist_add(this, track);
-}
+    const char* type;
+    char* name, * path;
+    GError *err = NULL;
+    GFileInfo* info;
 
-void tracklist_add_uri(Tracklist* this, const char* path)
-{
-    /* TODO validate audio file ! */
-    Track* track = track_new(path, path);
-    tracklist_add(this, track);
+    info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+            G_FILE_QUERY_INFO_NONE, NULL, &err);
+
+    /* file-open errors - report and cancel */
+    if (err) {
+        g_printerr("%s\n", err->message);
+        g_error_free(err);
+        return;
+    }
+
+    name = g_file_get_basename(file);
+    path = g_file_get_path(file);
+
+    /* mime type not readable ?? */
+    if (!(type = g_file_info_get_content_type(info))) {
+        g_printerr("Error getting mimetype for file \"%s\"\n", path);
+        goto finish;
+    }
+
+    /* invalid file*/
+    if (!g_strstr_len(type, 5, "audio")) {
+        g_printerr("Error loading file \"%s\": Not and audio file\n", path);
+        goto finish;
+    }
+
+    Track* track = track_new(name, path);
+    tracklist_add_track(this, track);
+
+finish:
+    g_object_unref(info);
+    g_free(name);
+    g_free(path);
 }
 
 Tracklist* tracklist_new(Player* player)
@@ -138,7 +165,25 @@ void tracklist_init(Tracklist* this)
     gtk_widget_show_all(this->tree);
 }
 
+void tracklist_free(Tracklist* this)
+{
+    if (!this) return;
+
+    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
+    Track* track;
+    GtkTreeIter iter;
+    GtkTreeSelection* selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
+
+    gtk_tree_selection_get_selected(selection, &model, &iter);
+
+    while (gtk_list_store_iter_is_valid(this->list, &iter)) {
+        gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
+        track_free(track);
+        gtk_list_store_remove(this->list, &iter);
+    }
 
 
-
-
+    gtk_widget_destroy(GTK_WIDGET(this->tree));
+    g_object_unref(this->list);
+    g_free(this);
+}

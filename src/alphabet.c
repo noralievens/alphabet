@@ -49,14 +49,17 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
 #ifdef MAC_INTEGRATION
 gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
 {
-    tracklist_add_uri(tracklist, path);
+    GFile* file = g_file_new_for_path(path);
+    tracklist_add_file(tracklist, file);
     return TRUE;
 }
 #endif
 
-gboolean on_destryo(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
+gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
 {
     printf("destroy_handler\n");
+    tracklist_free(tracklist);
+    /* player_free(player); */
     /* gtk_window_close(GTK_WINDOW(window)); */
     /* g_application_quit(G_APPLICATION(alphabet)); */
     return TRUE;
@@ -212,7 +215,7 @@ void on_activate(GtkApplication* alphabet)
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
     g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), NULL);
-    g_signal_connect(window, "destroy", G_CALLBACK(on_destryo), alphabet);
+    g_signal_connect(window, "destroy", G_CALLBACK(on_destroy), alphabet);
 
     /* event_callback will be called whenever player received event */
     player_set_event_callback(player, event_callback);

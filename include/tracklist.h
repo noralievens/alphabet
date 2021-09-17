@@ -24,17 +24,25 @@ typedef struct {
     Player* player;
 } Tracklist;
 
-extern void tracklist_remove_selected(Tracklist* this);
+extern Tracklist* tracklist_new(Player* player);
 
-extern void tracklist_add(Tracklist* this, Track* track);
+extern void tracklist_add_track(Tracklist* this, Track* track);
 
+/**
+ * Add a file as a track to the tracklist
+ *
+ * validate file exists and is an audio/\* file
+ *
+ * @param this tracklist object
+ * @file file to be added
+ */
 extern void tracklist_add_file(Tracklist* this, GFile* file);
-
-extern void tracklist_add_uri(Tracklist* this, const char* path);
 
 extern void tracklist_init(Tracklist* this);
 
-extern Tracklist* tracklist_new(Player* player);
+extern void tracklist_remove_selected(Tracklist* this);
+
+extern void tracklist_free(Tracklist* this);
 
 #endif
 

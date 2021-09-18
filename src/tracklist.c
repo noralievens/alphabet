@@ -124,7 +124,7 @@ void tracklist_add_file(Tracklist* this, GFile* file)
     }
 
     /* invalid file*/
-    if (!g_strstr_len(type, 5, "audio")) {
+    if (!g_strstr_len(type, -1, "audio")) {
         g_printerr("Error loading file \"%s\": Not and audio file\n", path);
         goto finish;
     }

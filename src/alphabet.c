@@ -223,7 +223,7 @@ void on_activate(GtkApplication* alphabet)
     player_set_event_callback(player, event_callback);
 
 #ifdef MAC_INTEGRATION
-    g_signal_connect(alphabet, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
+    g_signal_connect(osx, "NSApplicationOpenFile", G_CALLBACK(on_open_osx), NULL);
     gtkosx_application_set_use_quartz_accelerators(osx, TRUE);
     gtkosx_application_ready(osx);
 #endif

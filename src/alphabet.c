@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 08/09/2021
- * @filename    : window.c
+ * @file        : alphabet.c
  */
 
 #include <assert.h>

@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 16/09/2021
- * @filename    : tracklist.c
+ * @file        : tracklist.c
  */
 
 #include <assert.h>

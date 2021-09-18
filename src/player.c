@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 08/09/2021
- * @filename    : player.c
+ * @file        : player.c
  */
 
 #include <assert.h>
@@ -13,12 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "../include/track.h"
-
 #include "../include/player.h"
-
-#define UNUSED __attribute__((unused))
 
 
 static void mpv_print_status(int status)
@@ -126,18 +123,18 @@ double player_update(Player* this)
 void player_load_track(Player* this, Track* track, double position)
 {
     int status;
+    char posstr[15];
     if (position < 0) position = 0;
     /* TODO clamp max when length is known*/
 
     /* compensation for time-gap? */
     if (position) position += 0.050;
 
-    char posstr[15];
-    g_snprintf(posstr, sizeof(posstr)/sizeof(posstr[0]), "start=%f", position);
-
-    /* replace digit separator, always use dot regardless off locale */
-    char *p = posstr;
-    while (*p) { *p = *p == ',' ? '.' : *p; p++; }
+    g_snprintf(posstr,
+            sizeof(posstr)/sizeof(posstr[0]),
+            "start=%d.%d",
+            (int)position,
+            (int)(fmod(position, 1.0)*10000000));
 
     this->current = track;
 

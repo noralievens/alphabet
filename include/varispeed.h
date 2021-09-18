@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 13/09/2021
- * @filename    : varispeed.h
+ * @file        : varispeed.h
  */
 
 #ifndef VARISPEED_H

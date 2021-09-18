@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 08/09/2021
- * @filename    : track.h
+ * @file        : track.h
  */
 
 #ifndef TRACK_H

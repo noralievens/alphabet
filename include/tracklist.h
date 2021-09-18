@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 16/09/2021
- * @filename    : tracklist.h
+ * @file        : tracklist.h
  */
 
 #ifndef TRACK_LIST_H
@@ -60,7 +59,7 @@ extern void tracklist_add_track(Tracklist* this, Track* track);
  * all Tracks will be free-ed by tracklist
  *
  * @param this tracklist object
- * @file file to be added
+ * @param file file to be added
  */
 extern void tracklist_add_file(Tracklist* this, GFile* file);
 

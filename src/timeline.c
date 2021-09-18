@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 11/09/2021
- * @filename    : timeline.c
+ * @file        : timeline.c
  */
 
 

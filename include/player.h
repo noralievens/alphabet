@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 08/09/2021
- * @filename    : player.h
+ * @file        : player.h
  */
 
 #ifndef PLAYER_H
@@ -11,13 +10,13 @@
 
 #include <mpv/client.h>
 
-typedef enum {
+typedef enum PlayState {
     PLAY_STATE_PLAY,
     PLAY_STATE_STOP,
     PLAY_STATE_PAUSE,
 } PlayState;
 
-typedef struct {
+typedef struct Player {
     mpv_handle* mpv;
     Track* current;
     double position;

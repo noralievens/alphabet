@@ -1,7 +1,6 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
- * @created     : 12/09/2021
- * @filename    : counter.c
+ * @file        : counter.c
  */
 
 

@@ -26,6 +26,7 @@ INC_DIR      = include
 DATA_DIR     = share
 BIN_DIR      = bin
 BUILD_DIR    = build
+DOC_DIR  	 = doc
 MAN_DIR      = man
 MAN_SECTION  = man1
 
@@ -88,7 +89,7 @@ description: $(DESCRIPTION)
 endef
 export DEBIAN_CONTROL
 
-.PHONY: clean install uninstall dpkg appbundle
+.PHONY: clean install uninstall dpkg appbundle doc
 
 all: $(BIN_DIR)/$(TARGET)
 
@@ -109,14 +110,6 @@ man:
 	pandoc doc/$(TARGET).tmp doc/$(TARGET).md -s -t man -o $(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	rm -f doc/$(TARGET).tmp
 	./buildhelp.sh doc/$(TARGET).md
-
-clean:
-	rm -rf ./$(BUILD_DIR)
-	rm -rf ./$(BIN_DIR)
-	rm -rf ./$(MAN_DIR)
-	rm -rf ./$(TARGET)
-	rm  -f ./$(TARGET).deb
-	rm -rf ./$(APPBUNDLE)
 
 install: all
 	mkdir -p /$(DEST_DIR)/$(PREFIX)/$(BIN_DIR)
@@ -172,3 +165,17 @@ macosx/$(APPNAME).icns: macosx/$(APPNAME)Icon.png $(BIN_DIR)/$(TARGET)
 	cp macosx/$(APPNAME)Icon.png macosx/$(APPNAME).iconset/icon_512x512@2x.png
 	iconutil -c icns -o macosx/$(APPNAME).icns macosx/$(APPNAME).iconset
 	rm -r macosx/$(APPNAME).iconset
+
+doc:
+	mkdir -p $(DOC_DIR)
+	doxygen doxygen.cfg
+	@printf "%b%s%b\n" "\e[0;32m" "generated docs" "\e[0m"
+
+clean:
+	rm -rf ./$(BUILD_DIR)
+	rm -rf ./$(BIN_DIR)
+	rm -rf ./$(MAN_DIR)
+	rm -rf ./$(TARGET)
+	rm  -f ./$(TARGET).deb
+	rm -rf ./$(APPBUNDLE)
+

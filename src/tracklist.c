@@ -21,10 +21,31 @@
 
 /* static gboolean (*GtkTreeViewSearchEqualFunc) (GtkTreeModel *model, gint column, const gchar *key, GtkTreeIter *iter, gpointer search_data) */
 
+/**
+* Play the selected song in player
+*
+* @param this
+* @param selection the selected track (max 1)
+*/
 static void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection);
+
+/**
+ * function used by load_thread threadpool to async load tracks
+ *
+ * @param data file closure from thread_pool_push call
+ * @param user_data tracklist object closure from thread_pool_new
+ */
+static void tracklist_load_async(gpointer data, gpointer user_data);
+
+
+/*******************************************************************************
+ * extern functions
+ */
+
 
 Tracklist* tracklist_new(Player* player)
 {
+    GError* err = NULL;
     Tracklist* this = malloc(sizeof(Tracklist));
     this->player = player;
 
@@ -35,6 +56,18 @@ Tracklist* tracklist_new(Player* player)
             G_TYPE_STRING,
             G_TYPE_STRING,
             G_TYPE_POINTER);
+
+    /* create threadpool for async loading of files */
+    /* files can be added: g_thread_pool_push(this->load_thread, file, &err); */
+    /* FIXME only works for MAX THREADS = -1 - segfult for limited threads*/
+    this->load_thread = g_thread_pool_new(
+            tracklist_load_async, this, -1, FALSE, &err);
+
+    if (err) {
+        g_printerr("%s\n", err->message);
+        return NULL;
+    }
+
     return this;
 }
 
@@ -45,17 +78,24 @@ void tracklist_init(Tracklist* this)
     GtkCellRenderer* cellrenderer;
     int id;
 
-    this->tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(this->list));
-    gtk_tree_view_set_reorderable(GTK_TREE_VIEW(this->tree), TRUE);
-    gtk_tree_view_set_enable_search(GTK_TREE_VIEW(this->tree), FALSE);
+    this->tree = GTK_TREE_VIEW(
+            gtk_tree_view_new_with_model(GTK_TREE_MODEL(this->list)));
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
+    gtk_tree_view_set_reorderable(this->tree, TRUE);
+    gtk_tree_view_set_enable_search(this->tree, FALSE);
+
+    selection = gtk_tree_view_get_selection(this->tree);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
-    g_signal_connect_swapped(selection, "changed", G_CALLBACK(tracklist_on_selection_changed), this);
+
+    g_signal_connect_swapped(
+            selection,
+            "changed",
+            G_CALLBACK(tracklist_on_selection_changed),
+            this);
 
     id = TRACKLIST_COLUMN_NAME;
     column = gtk_tree_view_column_new();
-    gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
+    gtk_tree_view_append_column(this->tree, column);
     cellrenderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
@@ -65,13 +105,14 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_expand(column, TRUE);
     g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
     gtk_tree_view_column_set_sort_column_id(column, id);
-    gtk_tree_view_set_search_column(GTK_TREE_VIEW(this->tree), TRACKLIST_COLUMN_NAME);
+    gtk_tree_view_set_search_column(this->tree, TRACKLIST_COLUMN_NAME);
 
     id = TRACKLIST_COLUMN_LUFS;
     column = gtk_tree_view_column_new();
-    gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
+    gtk_tree_view_append_column(this->tree, column);
+    gtk_tree_view_column_set_alignment(column, 0.5);
     cellrenderer = gtk_cell_renderer_text_new();
-    gtk_cell_renderer_set_alignment(cellrenderer, 1.0, 0.0);
+    gtk_cell_renderer_set_alignment(cellrenderer, 0.5, 0.0);
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
@@ -79,14 +120,14 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "LUFs");
     gtk_tree_view_column_set_expand(column, FALSE);
-    /* g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL); */
     gtk_tree_view_column_set_sort_column_id(column, id);
 
     id = TRACKLIST_COLUMN_PEAK;
     column = gtk_tree_view_column_new();
-    gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
+    gtk_tree_view_append_column(this->tree, column);
+    gtk_tree_view_column_set_alignment(column, 0.5);
     cellrenderer = gtk_cell_renderer_text_new();
-    gtk_cell_renderer_set_alignment(cellrenderer, 1.0, 0.0);
+    gtk_cell_renderer_set_alignment(cellrenderer, 0.5, 0.0);
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
@@ -94,14 +135,14 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "Peak");
     gtk_tree_view_column_set_expand(column, FALSE);
-    /* g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL); */
     gtk_tree_view_column_set_sort_column_id(column, id);
 
     id = TRACKLIST_COLUMN_DURATION;
     column = gtk_tree_view_column_new();
-    gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
+    gtk_tree_view_append_column(this->tree, column);
+    gtk_tree_view_column_set_alignment(column, 0.5);
     cellrenderer = gtk_cell_renderer_text_new();
-    gtk_cell_renderer_set_alignment(cellrenderer, 1.0, 0.0);
+    gtk_cell_renderer_set_alignment(cellrenderer, 0.5, 0.0);
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
@@ -109,10 +150,9 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "Duration");
     gtk_tree_view_column_set_expand(column, FALSE);
-    g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
     gtk_tree_view_column_set_sort_column_id(column, id);
 
-    gtk_widget_show_all(this->tree);
+    gtk_widget_show_all(GTK_WIDGET(this->tree));
 }
 
 void tracklist_add_track(Tracklist* this, Track* track)
@@ -142,8 +182,9 @@ void tracklist_add_track(Tracklist* this, Track* track)
     this->player->min_lufs = this->min_lufs;
 }
 
-void tracklist_add_file(Tracklist* this, GFile* file)
+Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
 {
+    if (!G_IS_FILE(file)) return NULL;
     const char* type;
     char* name, * path;
     GError *err = NULL;
@@ -156,7 +197,7 @@ void tracklist_add_file(Tracklist* this, GFile* file)
     if (err) {
         g_printerr("%s\n", err->message);
         g_error_free(err);
-        return;
+        return NULL;
     }
 
     name = g_file_get_basename(file);
@@ -165,22 +206,36 @@ void tracklist_add_file(Tracklist* this, GFile* file)
     /* mime type not readable ?? */
     if (!(type = g_file_info_get_content_type(info))) {
         g_printerr("Error getting mimetype for file \"%s\"\n", path);
-        goto finish;
+        goto fail;
     }
 
     /* invalid file*/
     if (!g_strstr_len(type, -1, "audio")) {
         g_printerr("Error loading file \"%s\": Not and audio file\n", path);
-        goto finish;
+        goto fail;
     }
 
     Track* track = track_new(name, path);
-    tracklist_add_track(this, track);
-
-finish:
     g_object_unref(info);
     g_free(name);
     g_free(path);
+    return track;
+
+fail:
+    g_object_unref(info);
+    g_free(name);
+    g_free(path);
+    return NULL;
+}
+
+void tracklist_add_file(Tracklist* this, GFile* file)
+{
+    GError* err = NULL;
+    g_thread_pool_push(this->load_thread, file, &err);
+    if (err) {
+        g_printerr("%s\n", err->message);
+    }
+    return;
 }
 
 void tracklist_remove_selected(Tracklist* this)
@@ -237,4 +292,13 @@ void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection
     if (this->player->marker) position = this->player->marker;
     else if (!this->player->rtn) position = player_update(this->player);
     player_load_track(this->player, track, position);
+}
+
+void tracklist_load_async(gpointer data, gpointer user_data)
+{
+    GFile* file = data;
+    Tracklist* this = user_data;
+    Track* track = tracklist_file_to_track(this, file);
+    /* this shouldn't be wrapped in g_idle_ad ?? */
+    if (track) tracklist_add_track(this, track);
 }

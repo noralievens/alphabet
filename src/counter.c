@@ -22,8 +22,6 @@
 void counter_update(Counter* this)
 {
     if (!this || !this->player) return;
-    /* if (this->player->position - this->position < 0.1) return; */
-    /* this->position = this->player->position; */
     char count[100];
     gdouble seconds = this->player->position;
     seconds *= seconds < 0 ? -1 : 1;
@@ -45,13 +43,10 @@ Counter* counter_new(Player* player)
     gtk_box_pack_start(GTK_BOX(this->box), frame, TRUE, TRUE, 0);
 
     this->label = gtk_label_new("0:00.00");
-    /* gtk_label_set_ellipsize(GTK_LABEL(this->label), PANGO_ELLIPSIZE_END); */
     gtk_container_add(GTK_CONTAINER(frame), this->label);
     gtk_label_set_max_width_chars(GTK_LABEL(this->label), 9);
-    /* gtk_widget_set_margin_start(this->label, MARGIN); */
-    /* gtk_widget_set_margin_end(this->label, MARGIN); */
-    /* gtk_widget_set_size_request(frame, 100, -1); */
-
+    gtk_widget_set_margin_start(this->label, MARGIN/2);
+    gtk_widget_set_margin_end(this->label, MARGIN/2);
     gtk_widget_show_all(this->box);
 
     return this;

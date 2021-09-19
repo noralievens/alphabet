@@ -95,14 +95,14 @@ Timeline* timeline_new(Player* player)
     frame = gtk_frame_new(NULL);
     gtk_box_pack_start(GTK_BOX(this->box), frame, TRUE, TRUE, 0);
 
-    assert(gdk_rgba_parse(&this->position, "rgba(128,128,128,0.5)")
-            && gdk_rgba_parse(&this->loop, "rgba(0,128,0,0.25)")
-            && gdk_rgba_parse(&this->marker, "rgba(128,0,0,0.5)")
+    assert(gdk_rgba_parse(&this->position, COLOR_TIMELINE_POSITION)
+            && gdk_rgba_parse(&this->loop, COLOR_TIMELINE_LOOP)
+            && gdk_rgba_parse(&this->marker, COLOR_TIMELINE_MARKER)
             && "allocate timeline colors");
 
     darea = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(frame), darea);
-    gtk_widget_set_size_request(darea, 100, -1);
+    gtk_widget_set_size_request(darea, WINDOW_X/12, -1);
     gtk_widget_set_hexpand(darea, TRUE);
 
     gtk_widget_add_events(darea, GDK_BUTTON_PRESS_MASK);

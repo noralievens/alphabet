@@ -21,9 +21,10 @@ enum {
 
 typedef struct {
     GtkListStore* list;         /**< data structure of the tree */
-    GtkWidget* tree;            /**< gui widget (file-manager-like) */
+    GtkTreeView* tree;            /**< gui widget (file-manager-like) */
     Player* player;             /**< reference to the player object */
     gdouble min_lufs;
+    GThreadPool* load_thread;
 } Tracklist;
 
 /**
@@ -57,9 +58,9 @@ extern void tracklist_add_track(Tracklist* this, Track* track);
 /**
  * Add a file as a track to the tracklist
  *
- * validate file exists and is an audio/\* file
+ * add track asynchronously
  * a new Track is allocated and stored in the list
- * all Tracks will be free-ed by tracklist
+ * all Tracks will be free-ed by tracklist_free
  *
  * @param this tracklist object
  * @param file file to be added
@@ -84,6 +85,17 @@ extern void tracklist_remove_selected(Tracklist* this);
  * @param this tracklist object
  */
 extern void tracklist_free(Tracklist* this);
+
+/**
+ * Create a new track from file
+ *
+ * tracklist_add_file calls this function in a threadpool
+ * return track free-ed by tracklist_free or track_free
+ *
+ * @param file the file used to create a track
+ * @return the newly created track or NULL
+ */
+extern Track* tracklist_file_to_track(Tracklist* this, GFile* file);
 
 #endif
 

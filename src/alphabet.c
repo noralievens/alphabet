@@ -41,6 +41,7 @@ void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const g
     for (gint i = 0; i < n_files; i++) {
         /* must - cannot unref file?? */
         tracklist_add_file(tracklist, files[i]);
+        /* g_object_unref(files[i]); */
     }
     on_activate(GTK_APPLICATION(alphabet));
 }
@@ -170,7 +171,7 @@ void on_activate(GtkApplication* alphabet)
     window = gtk_application_window_new(alphabet);
     gtk_window_set_title(GTK_WINDOW(window), "Alphabet");
     gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-    gtk_window_set_default_size(GTK_WINDOW(window), 640, 320);
+    gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_X, WINDOW_Y);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
 
@@ -186,7 +187,7 @@ void on_activate(GtkApplication* alphabet)
     gtk_widget_show_all(box);
 
     tracklist_init(tracklist);
-    gtk_container_add(GTK_CONTAINER(scrolled), tracklist->tree);
+    gtk_container_add(GTK_CONTAINER(scrolled), GTK_WIDGET(tracklist->tree));
 
     /* button = gtk_button_new_with_mnemonic("_Add"); */
     button = gtk_button_new_from_icon_name("list-add-symbolic", ICON_SIZE);
@@ -230,13 +231,17 @@ void on_activate(GtkApplication* alphabet)
 
 int window_run(int argc, char** argv)
 {
-    int status;
+    int status, flags;
     GtkApplication* alphabet;
+
+    flags =   G_APPLICATION_ALLOW_REPLACEMENT
+            | G_APPLICATION_REPLACE
+            | G_APPLICATION_HANDLES_OPEN;
 
     player = player_init();
     if (!player) exit(EXIT_FAILURE);
 
-    alphabet = gtk_application_new("org.gtk.alphabet", G_APPLICATION_HANDLES_OPEN);
+    alphabet = gtk_application_new( "org.gtk.alphabet", flags);
 
     /* create here because "open" dependes on tracklist */
     /* widgets are created later on in tracklist_init */

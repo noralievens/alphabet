@@ -180,7 +180,7 @@ void set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
     ebur128_state* sts = NULL;
     double* buffer;
     double lufs, peak;
-    int flags = EBUR128_MODE_I | EBUR128_MODE_SAMPLE_PEAK;
+    int flags = EBUR128_MODE_I | EBUR128_MODE_TRUE_PEAK;
     unsigned int sr = file_info->samplerate;
     unsigned int chs = file_info->channels;
 

@@ -175,4 +175,4 @@ clean:
 	rm -rf ./$(APPBUNDLE)
 
 brewdependencies:
-	brew install libebur128 mpv gtk-mac-bundler gtk+3 pkg-config
+	brew install libebur128 mpv gtk-mac-integration gtk+3 pkg-config

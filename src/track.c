@@ -122,7 +122,6 @@ char* stralloc(const char* src)
 
 void set_libav_tags(Track* this)
 {
-
     AVFormatContext* ctx = avformat_alloc_context();
     AVDictionaryEntry* tag = NULL;
     int flags = AV_DICT_IGNORE_SUFFIX;
@@ -167,8 +166,9 @@ void set_libav_tags(Track* this)
 
 void set_file_info(Track* this, SF_INFO* file_info)
 {
-    this->sample_rate = calloc(11, sizeof(char));
-    sprintf(this->sample_rate, "%d", file_info->samplerate);
+    const int len = 7;
+    this->sample_rate = calloc(len+1, sizeof(char));
+    snprintf(this->sample_rate, len, "%d", file_info->samplerate);
 
     this->length = (double)file_info->frames / file_info->samplerate;
     return;

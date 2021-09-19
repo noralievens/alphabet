@@ -40,12 +40,10 @@ CC           = gcc
 SOURCES     := $(shell find $(SRC_DIR) -name *.c)
 OBJECTS     := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 
-LIBS         = $(shell pkg-config --libs gtk+-3.0 ) \
-			   $(shell pkg-config --libs mpv) \
+LIBS         = $(shell pkg-config --libs gtk+-3.0 mpv libavformat libavutil libebur128 sndfile) \
 			   -lm
 
-INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 ) \
-			   $(shell pkg-config --cflags mpv) \
+INCLUDES     = $(shell pkg-config --cflags gtk+-3.0 mpv libavformat libavutil libebur128 sndfile) \
 			   -I/usr/include/mpv
 
 

@@ -5,7 +5,6 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <gtk/gtk.h>
 #include <mpv/client.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,14 +13,31 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "../include/config.h"
 #include "../include/track.h"
+
 #include "../include/player.h"
 
+#ifndef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif
 
-static void mpv_print_status(int status)
-{
-    fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
-}
+#ifndef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#ifndef CLAMP
+#define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#endif
+
+#ifndef ELEMENTS
+#define ELEMENTS(arr) (sizeof (arr) / sizeof ((arr)[0]))
+#endif
+
+
+/* static double volume_to_db(double volume); */
+static double db_to_volume(double volume);
+static void mpv_print_status(int status);
 
 void player_set_speed(Player* this, gdouble speed)
 {
@@ -42,7 +58,19 @@ void player_stop(Player* this)
         mpv_print_status(status);
     }
     player_load_track(this, this->current, 0);
-    player_toggle(this);
+    player_pause(this);
+    if (this->rtn) player_goto(this, 0);
+}
+
+void player_pause(Player* this)
+{
+    int status;
+    int pause = 1;
+
+    if ((status = mpv_set_property(this->mpv, "pause", MPV_FORMAT_FLAG, &pause)) < 0) {
+        mpv_print_status(status);
+    }
+    if (this->rtn) player_goto(this, 0);
 }
 
 void player_toggle(Player* this)
@@ -105,7 +133,7 @@ void player_goto(Player* this, double position)
     if (position < 0) position = 0;
 
     char posstr[9];
-    g_snprintf(posstr, sizeof(posstr)/sizeof(posstr[0]), "%f", position);
+    g_snprintf(posstr, ELEMENTS(posstr), "%f", position);
 
     const char* cmd[] = {"seek", posstr, "absolute+keyframes", NULL};
     if ((status = mpv_command_async(this->mpv, 0, cmd)) < 0) {
@@ -123,22 +151,28 @@ double player_update(Player* this)
 void player_load_track(Player* this, Track* track, double position)
 {
     int status;
-    char posstr[15];
-    if (position < 0) position = 0;
-    /* TODO clamp max when length is known*/
+    char posstr[99];
+    position = CLAMP(position, 0, track->length);
+    double gain, volume;
+
+
+    gain = this->min_lufs - track->lufs;
+    volume = db_to_volume(gain);
 
     /* compensation for time-gap? */
     if (position) position += 0.050;
 
     g_snprintf(posstr,
-            sizeof(posstr)/sizeof(posstr[0]),
-            "start=%d.%d",
+            ELEMENTS(posstr),
+            "start=%d.%d,volume=%f",
             (int)position,
-            (int)(fmod(position, 1.0)*10000000));
+            (int)(fmod(position, 1.0)*10000000),
+            volume
+    );
 
     this->current = track;
 
-    const char *cmd[] = {"loadfile", track->uri, "replace", posstr, NULL};
+    const char *cmd[] = {"loadfile", track->path, "replace", posstr, NULL};
     if ((status = mpv_command_async(this->mpv, 0, cmd)) < 0) {
         mpv_print_status(status);
     }
@@ -183,6 +217,15 @@ int player_event_handler(Player* this)
     return FALSE;
 }
 
+void player_set_gain(Player* this, double gain)
+{
+    int status;
+
+    if ((status = mpv_set_property(this->mpv, "replaygain-preamp", MPV_FORMAT_DOUBLE, &gain)) < 0) {
+        mpv_print_status(status);
+    }
+}
+
 void player_set_event_callback(Player* this, void(*event_callback)(void*))
 {
 	mpv_set_wakeup_callback(this->mpv, event_callback, this);
@@ -192,6 +235,8 @@ Player* player_init()
 {
     int status;
     int pitch_correction = 0;
+    /* const char* replay_gain = "track"; */
+
     Player* this = malloc(sizeof(Player));
 
     this->current = NULL;
@@ -211,9 +256,13 @@ Player* player_init()
     mpv_observe_property(this->mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
 	mpv_observe_property(this->mpv, 0, "length", MPV_FORMAT_DOUBLE);
 
-    if ((status = mpv_set_option(this->mpv, "audio-pitch-correction", MPV_FORMAT_FLAG, &pitch_correction)) < 0) {
+    if ((status = mpv_set_property(this->mpv, "audio-pitch-correction", MPV_FORMAT_FLAG, &pitch_correction)) < 0) {
         mpv_print_status(status);
     }
+
+    /* if ((status = mpv_set_property(this->mpv, "replaygain", MPV_FORMAT_STRING, &replay_gain)) < 0) { */
+    /*     mpv_print_status(status); */
+    /* } */
 
     if ((status = mpv_initialize(this->mpv)) < 0) {
         mpv_print_status(status);
@@ -227,3 +276,19 @@ void player_free(Player* this)
     mpv_terminate_destroy(this->mpv);
     free(this);
 }
+
+double volume_to_db(double volume)
+{
+    return 60.0 * log(volume / 100.0) / log(10.0);
+}
+
+double db_to_volume(double db)
+{
+    return exp(log(10.0)*(db/60.0 + 2));
+}
+
+void mpv_print_status(int status)
+{
+    fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
+}
+

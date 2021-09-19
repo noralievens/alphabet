@@ -26,11 +26,16 @@ typedef struct Player {
     PlayState play_state;
     int rtn;
     double speed;
+    double min_lufs;
 } Player;
+
+extern void player_set_gain(Player* this, double gain);
 
 extern void player_set_speed(Player* this, double speed);
 
 extern void player_stop(Player* this);
+
+extern void player_pause(Player* this);
 
 extern void player_toggle(Player* this);
 

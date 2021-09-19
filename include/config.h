@@ -13,6 +13,10 @@
 #define ICON_SIZE   GTK_ICON_SIZE_MENU
 #define MARGIN      12
 
+
+
+extern void dtoduration(char* dest, double num);
+
 #endif
 
 // vim:ft=c

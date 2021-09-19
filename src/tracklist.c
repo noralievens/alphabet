@@ -32,6 +32,8 @@ Tracklist* tracklist_new(Player* player)
             TRACKLIST_COLUMNS,
             G_TYPE_STRING,
             G_TYPE_STRING,
+            G_TYPE_STRING,
+            G_TYPE_STRING,
             G_TYPE_POINTER);
     return this;
 }
@@ -51,13 +53,12 @@ void tracklist_init(Tracklist* this)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     g_signal_connect_swapped(selection, "changed", G_CALLBACK(tracklist_on_selection_changed), this);
 
-    id = 0;
+    id = TRACKLIST_COLUMN_NAME;
     column = gtk_tree_view_column_new();
     gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
     cellrenderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
-    /* gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED); */
     gtk_tree_view_column_set_clickable(column, TRUE);
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "Track");
@@ -66,12 +67,41 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_sort_column_id(column, id);
     gtk_tree_view_set_search_column(GTK_TREE_VIEW(this->tree), TRACKLIST_COLUMN_NAME);
 
-    id = 1;
+    id = TRACKLIST_COLUMN_LUFS;
     column = gtk_tree_view_column_new();
     gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
     cellrenderer = gtk_cell_renderer_text_new();
     gtk_cell_renderer_set_alignment(cellrenderer, 1.0, 0.0);
-    /* gtk_cell_renderer_set_padding(cellrenderer, TEXT_PADDING, 0); */
+    gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
+    gtk_tree_view_column_set_resizable(column, FALSE);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_column_set_clickable(column, TRUE);
+    gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
+    gtk_tree_view_column_set_title(column, "LUFs");
+    gtk_tree_view_column_set_expand(column, FALSE);
+    /* g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL); */
+    gtk_tree_view_column_set_sort_column_id(column, id);
+
+    id = TRACKLIST_COLUMN_PEAK;
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
+    cellrenderer = gtk_cell_renderer_text_new();
+    gtk_cell_renderer_set_alignment(cellrenderer, 1.0, 0.0);
+    gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
+    gtk_tree_view_column_set_resizable(column, FALSE);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_column_set_clickable(column, TRUE);
+    gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
+    gtk_tree_view_column_set_title(column, "Peak");
+    gtk_tree_view_column_set_expand(column, FALSE);
+    /* g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL); */
+    gtk_tree_view_column_set_sort_column_id(column, id);
+
+    id = TRACKLIST_COLUMN_DURATION;
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_append_column(GTK_TREE_VIEW(this->tree), column);
+    cellrenderer = gtk_cell_renderer_text_new();
+    gtk_cell_renderer_set_alignment(cellrenderer, 1.0, 0.0);
     gtk_tree_view_column_pack_start(column, cellrenderer, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
@@ -88,13 +118,28 @@ void tracklist_init(Tracklist* this)
 void tracklist_add_track(Tracklist* this, Track* track)
 {
     GtkTreeIter iter;
+
+    gchar lufs[7];
+    g_snprintf(lufs, G_N_ELEMENTS(lufs), "%.2f", track->lufs);
+
+    gchar peak[7];
+    g_snprintf(peak, G_N_ELEMENTS(peak), "%.2f", track->peak);
+
+    gchar duration[10];
+    dtoduration(duration, track->length);
+
     gtk_list_store_append(this->list, &iter);
     gtk_list_store_set(
             this->list, &iter,
             TRACKLIST_COLUMN_NAME, track->name,
-            TRACKLIST_COLUMN_DURATION, track->duration,
+            TRACKLIST_COLUMN_LUFS, lufs,
+            TRACKLIST_COLUMN_PEAK, peak,
+            TRACKLIST_COLUMN_DURATION, duration,
             TRACKLIST_COLUMN_DATA, track,
             -1);
+
+    this->min_lufs = MIN(this->min_lufs, track->lufs);
+    this->player->min_lufs = this->min_lufs;
 }
 
 void tracklist_add_file(Tracklist* this, GFile* file)

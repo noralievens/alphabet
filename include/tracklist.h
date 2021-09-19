@@ -12,6 +12,8 @@
 
 enum {
     TRACKLIST_COLUMN_NAME,
+    TRACKLIST_COLUMN_LUFS,
+    TRACKLIST_COLUMN_PEAK,
     TRACKLIST_COLUMN_DURATION,
     TRACKLIST_COLUMN_DATA,
     TRACKLIST_COLUMNS
@@ -21,6 +23,7 @@ typedef struct {
     GtkListStore* list;         /**< data structure of the tree */
     GtkWidget* tree;            /**< gui widget (file-manager-like) */
     Player* player;             /**< reference to the player object */
+    gdouble min_lufs;
 } Tracklist;
 
 /**

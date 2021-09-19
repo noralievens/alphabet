@@ -69,9 +69,6 @@ INCLUDES    += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
 
 endif
 
-
-
-
 # debian dpkg control file
 define DEBIAN_CONTROL
 Package: $(TARGET)
@@ -87,7 +84,7 @@ description: $(DESCRIPTION)
 endef
 export DEBIAN_CONTROL
 
-.PHONY: clean install uninstall dpkg appbundle doc
+.PHONY: clean install uninstall dpkg appbundle doc brewdependencies
 
 all: $(BIN_DIR)/$(TARGET)
 
@@ -177,3 +174,5 @@ clean:
 	rm  -f ./$(TARGET).deb
 	rm -rf ./$(APPBUNDLE)
 
+brewdependencies:
+	brew install libebur128 mpv gtk-mac-bundler gtk+3 pkg-config

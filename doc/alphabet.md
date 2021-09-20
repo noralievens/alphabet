@@ -8,7 +8,7 @@ alphabet - music player
 Alphabet is simple gtk-3 music player\
 It's main focus is to allow precise auditive comparison between alike music files, aka A-B testing\
 By default all audio files are matched to the track with lowest average loudness according to ebu R128\
-Playback can be either continous, where the user can switch files seemlessly without interrupting the musical flow\
+Playback can be either continuously, where the user can switch files seamlessly without interrupting the musical flow\
 A marker can be placed in the timeline to reset the playback on file selection or play/pause\
 Alternatively, the user can loop a specified region
 

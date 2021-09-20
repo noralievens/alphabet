@@ -80,6 +80,7 @@ doxy/
 compile_commands.json
 .ccls-cache
 tags
+$(MAC_DIR)/$(NAME).icns
 endef
 export GIT_IGNORE
 
@@ -196,18 +197,18 @@ deb: install
 $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png $(BIN_DIR)/$(TARGET)
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
 	mkdir -v    $(MAC_DIR)/$(NAME).iconset
-	OF=$(MAC_DIR)/$(NAME).iconset/icon_
-	sips -z 16 16     $(ICON_DIR)/$(TARGET).png --out $(OF)16x16.png
-	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(OF)_16x16@2x.png
-	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(OF)_32x32.png
-	sips -z 64 64     $(ICON_DIR)/$(TARGET).png --out $(OF)_32x32@2x.png
-	sips -z 128 128   $(ICON_DIR)/$(TARGET).png --out $(OF)_128x128.png
-	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(OF)_128x128@2x.png
-	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(OF)_256x256.png
-	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(OF)_256x256@2x.png
-	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(OF)_512x512.png
-	sips -z 1024 1024 $(ICON_DIR)/$(TARGET).png --out $(OF)_512x512@2x.png
-	iconutil -c icns -o $(MAC_DIR)/$(NAME).icns macosx/$(NAME).iconset
+	OF=$(MAC_DIR)/$(NAME).iconset
+	sips -z 16 16     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_16x16.png
+	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_16x16@2x.png
+	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_32x32.png
+	sips -z 64 64     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_32x32@2x.png
+	sips -z 128 128   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_128x128.png
+	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_128x128@2x.png
+	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_256x256.png
+	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_256x256@2x.png
+	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_512x512.png
+	sips -z 1024 1024 $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_512x512@2x.png
+	iconutil -c icns -o $(MAC_DIR)/$(NAME).icns $(OF)
 	rm -rv      $(MAC_DIR)/$(NAME).iconset
 
 app: $(MAC_DIR)/$(APPNAME).icns

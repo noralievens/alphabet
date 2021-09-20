@@ -2,8 +2,7 @@
 # @author       : Arno Lievens (arnolievens@gmail.com)
 # @date         : Sunday Jun 27, 2021 09:37:42 CEST
 # @file         : Makefile
-# @brief        : makefile
-# @copyright    :
+# @copyright    : Copyright (c) 2021 Arno Lievens
 #
 TARGET 			= alphabet
 NAME 		 	= Alphabet
@@ -12,29 +11,12 @@ VERSION      	= 0.1
 AUTHOR       	= arnolievens@gmail.com
 DATE         	= July 2021
 
-
-################################################################################
-# Dirs
-#
-PREFIX          = /usr/local
-SRC_DIR     	= src
-INC_DIR     	= include
-DATA_DIR    	= share
-BIN_DIR     	= bin
-BUILD_DIR   	= build
-MAN_DIR     	= $(DATA_DIR)/man
-MAN_SECTION 	= man1
-DOC_DIR 		= doc
-DESKTOP_DIR     = $(DATA_DIR)/applications
-ICON_DIR 		= $(DATA_DIR)/icons
-
-
 ################################################################################
 # Build
 #
-SOURCES        := $(shell find $(SRC_DIR) -name *.c)
-HEADERS        := $(shell find $(INC_DIR) -name *.h)
-OBJECTS        := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
+SOURCES         = $(shell find $(SRC_DIR) -name *.c)
+HEADERS         = $(shell find $(INC_DIR) -name *.h)
+OBJECTS         = $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 LIBS         	= $(shell pkg-config --libs gtk+-3.0 mpv libebur128 )
 LIBS           += $(shell pkg-config --libs libavformat libavutil sndfile)
 LIBS		   += -lm
@@ -56,6 +38,34 @@ CFLAGS		   += -Wunreachable-code
 CTAGS  	        = ctags
 CTAGSFLAGS      =
 
+
+################################################################################
+# Apt
+#
+APT_DEPS        = libgtk-3-dev libmpv-dev libebur128-dev
+APT_DEPS       += libavformat-dev libavutil-dev libsndfile1-dev
+
+
+################################################################################
+# Brew
+#
+BREW            = pkg-config gtk+3 mpv libebur128 gtk-mac-integration
+
+
+################################################################################
+# Dirs
+#
+PREFIX          = /usr/local
+SRC_DIR     	= src
+INC_DIR     	= include
+DATA_DIR    	= share
+BIN_DIR     	= bin
+BUILD_DIR   	= build
+MAN_DIR     	= $(DATA_DIR)/man
+MAN_SECTION 	= man1
+DOC_DIR 		= doc
+DESKTOP_DIR     = $(DATA_DIR)/applications
+ICON_DIR 		= $(DATA_DIR)/icons
 
 
 ################################################################################
@@ -225,22 +235,11 @@ app: $(MAC_DIR)/$(APPNAME).icns
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:
-	brew install -- \
-				pkg-config \
-				gtk+3 \
-				mpv \
-				libebur128 \
-				gtk-mac-integration
+	brew install $(BREW_DEPS)
 	@printf "\e[0;32m%s\e[0m\n" "homebrew installed dependencies"
 
 apt:
-	apt install -- \
-				pkg-config \
-				libgtk-3-dev \
-				libmpv-dev \
-				libebur128-dev \
-				libavformat-dev \
-				libavutil-dev
+	apt install $(APT_DEPS)
 	@printf "\e[0;32m%s\e[0m\n" "apt installed dependencies"
 
 clean:
@@ -265,7 +264,7 @@ help:
 	@echo '  doxy        build doxygen documentation'
 	@echo '  install     install in $(PREXIF)'
 	@echo '  uninstall   install from $(PREXIF)'
-	@echo '  deb         builb debian package'
+	@echo '  deb         builb .deb package'
 	@echo '  app         build .app macos bundle'
 	@echo '  apt         install dependencies with apt'
 	@echo '  brew        install dependencies with homebrew'

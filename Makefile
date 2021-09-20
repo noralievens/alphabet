@@ -86,6 +86,7 @@ $(NAME).app
 bin/
 build/
 doxy/
+share/man/
 
 compile_commands.json
 .ccls-cache

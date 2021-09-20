@@ -170,7 +170,7 @@ doxy:
 	doxygen $(DOXY_CFG)
 	@printf "\e[0;32m%s\e[0m\n" "generated doxygen docs in ./$(DOXY_DIR)"
 
-install: all
+install: all man
 	mkdir -pv   $(PREFIX)/$(BIN_DIR)
 	cp -fv      $(BIN_DIR)/$(TARGET) \
 	            $(PREFIX)/$(BIN_DIR)/$(TARGET)

@@ -1,8 +1,11 @@
-compile_commands.json
-.ccls-cache
 alphabet/
-alphabet.bundle/
-Alphabet.app/
+alphabet.deb
+Alphabet.app
+
 bin/
 build/
-doc/
+doxy/
+
+compile_commands.json
+.ccls-cache
+tags

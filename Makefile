@@ -4,7 +4,7 @@
 # @file         : Makefile
 # @brief        : makefile
 # @copyright    :
-
+#
 TARGET 			= alphabet
 NAME 		 	= Alphabet
 DESCRIPTION  	= audioplayer
@@ -24,6 +24,7 @@ BIN_DIR     	= bin
 BUILD_DIR   	= build
 MAN_DIR     	= $(DATA_DIR)/man
 MAN_SECTION 	= man1
+DOC_DIR 		= doc
 DESKTOP_DIR     = $(DATA_DIR)/applications
 ICON_DIR 		= $(DATA_DIR)/icons
 
@@ -32,6 +33,7 @@ ICON_DIR 		= $(DATA_DIR)/icons
 # Build
 #
 SOURCES        := $(shell find $(SRC_DIR) -name *.c)
+HEADERS        := $(shell find $(INC_DIR) -name *.h)
 OBJECTS        := $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 LIBS         	= $(shell pkg-config --libs gtk+-3.0 mpv libebur128 )
 LIBS           += $(shell pkg-config --libs libavformat libavutil sndfile)
@@ -41,7 +43,6 @@ INCLUDES       += $(shell pkg-config --cflags libavformat libavutil sndfile)
 INCLUDES	   += -I/usr/include/mpv
 
 CC           	= gcc
-
 CFLAGS		    = -DVERSION=\"$(VERSION)\"
 CFLAGS		   += -DDEBUG -g
 CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
@@ -52,18 +53,39 @@ CFLAGS		   += -Wunreachable-code
 # CFLAGS		   += -Wswitch-enum
 # CFLAGS		   += -Wconversion
 
-LDFLAGS         =
+CTAGS  	        = ctags
+CTAGSFLAGS      =
+
 
 
 ################################################################################
-# Doc
+# Doxy
 #
-DOXY_CFG 		= doxygen.cfg
-DOC_DIR  		= doc
+DOXY_CFG 		= $(DOC_DIR)/doxygen.cfg
+DOXY_DIR  		= doxy
 
 
 ################################################################################
-# Debian dpkg
+# Gitignore
+
+define GIT_IGNORE
+$(TARGET)/
+$(TARGET).deb
+$(NAME).app
+
+bin/
+build/
+doxy/
+
+compile_commands.json
+.ccls-cache
+tags
+endef
+export GIT_IGNORE
+
+
+################################################################################
+# Debian .deb
 #
 DEB_PKG 		= $(TARGET).deb
 dpkg: PREFIX    = $(TARGET)/usr/local
@@ -100,7 +122,7 @@ endif
 ################################################################################
 # Targets
 #
-.PHONY: clean install uninstall deb app doc man homebrew
+.PHONY: all ctags gitignore man doxy install uninstall deb app apt brew clean
 
 all: $(BIN_DIR)/$(TARGET)
 
@@ -110,7 +132,14 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 
 $(BIN_DIR)/$(TARGET): $(OBJECTS)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(OBJECTS) -o $@ $(LDFLAGS) -I$(INCLUDES) $(LIBS)
+	$(CC) $(OBJECTS) -o $@ -I$(INCLUDES) $(LIBS)
+
+ctags: $(HEADERS) $(SOURCES)
+	$(CTAGS) $(CTAGSFLAGS) $(HEADERS) $(SOURCES)
+
+gitignore:
+	@echo "$$GIT_IGNORE" > .gitignore
+	@printf "\e[0;32m%s\e[0m\n" "copied defaults to .gitignore"
 
 man:
 	mkdir -p ./$(MAN_DIR)/$(MAN_SECTION)
@@ -125,10 +154,10 @@ man:
 	rm -fv      $(DOC_DIR)/$(TARGET).tmp
 	@printf "\e[0;32m%s\e[0m\n" "generated manpage in ./$(MAN_DIR)"
 
-doc:
-	mkdir -p $(DOC_DIR)
+doxy:
+	mkdir -p $(DOXY_DIR)
 	doxygen $(DOXY_CFG)
-	@printf "\e[0;32m%s\e[0m\n" "generated doxygen docs in ./$(DOC_DIR)"
+	@printf "\e[0;32m%s\e[0m\n" "generated doxygen docs in ./$(DOXY_DIR)"
 
 install: all
 	mkdir -pv   $(PREFIX)/$(BIN_DIR)
@@ -194,7 +223,7 @@ app: $(MAC_DIR)/$(APPNAME).icns
 				$(APP_PKG)/Contents/MacOs/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
-homebrew:
+brew:
 	brew install -- \
 				pkg-config \
 				gtk+3 \
@@ -216,8 +245,28 @@ apt:
 clean:
 	rm -fvr     ./$(BUILD_DIR)
 	rm -fvr     ./$(BIN_DIR)
+	rm -fvr 	./$(DOXY_DIR)
 	rm -fvr     ./$(MAN_DIR)
 	rm -fvr     ./$(TARGET)
 	rm -fv      ./$(TARGET).deb
 	rm -fvr     ./$(APP_PKG)
+	rm -fv      ./tags
 	@printf "\e[0;32m%s\e[0m\n" "cleaned $(TARGET)"
+
+help:
+	@echo '$(TARGET) Makefile help'
+	@echo
+	@echo 'usage: make <TARGET>'
+	@echo '  all         compile and link'
+	@echo '  ctags       create ctags for VI editor'
+	@echo '  gitignore   create default .gitignore file'
+	@echo '  man         convert doc/$(TARGET).md to manpage'
+	@echo '  doxy        build doxygen documentation'
+	@echo '  install     install in $(PREXIF)'
+	@echo '  uninstall   install from $(PREXIF)'
+	@echo '  deb         builb debian package'
+	@echo '  app         build .app macos bundle'
+	@echo '  apt         install dependencies with apt'
+	@echo '  brew        install dependencies with homebrew'
+	@echo '  clean       clean build, bin, doxy, man'
+	@echo '  help        print this message'

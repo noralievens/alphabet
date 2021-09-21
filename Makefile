@@ -26,7 +26,7 @@ INCLUDES	   += -I/usr/include/mpv
 
 CC           	= gcc
 CFLAGS		    = -DVERSION=\"$(VERSION)\"
-CFLAGS		   += -DDEBUG -g
+# CFLAGS		   += -DDEBUG -g
 CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS		   += -Wpointer-arith -Wcast-align -Wstrict-prototypes
 CFLAGS		   += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
@@ -231,7 +231,7 @@ app: $(MAC_DIR)/$(APPNAME).icns
 				$(APP_PKG)/Contents/
 	cp -fv		$(MAC_DIR)/$(NAME).icns \
 				$(APP_PKG)/Contents/Resources/
-	cp -fv		$(BIN_DIR)/$(TARGET) \
+	cp -fv		$(BIN_DIR)/* \
 				$(APP_PKG)/Contents/MacOs/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 

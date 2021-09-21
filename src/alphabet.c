@@ -51,7 +51,8 @@ gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer 
 {
     GFile* file = g_file_new_for_path(path);
     tracklist_add_file(tracklist, file);
-    g_object_unref(file);
+    /* TODO check unreffing GFile - cannot unref here because async add_file */
+    /* g_object_unref(file); */
     return TRUE;
 }
 #endif
@@ -234,14 +235,9 @@ int window_run(int argc, char** argv)
     int status, flags;
     GtkApplication* alphabet;
 
-
-#ifdef MAC_INTEGRATION
-    flags =   G_APPLICATION_HANDLES_OPEN;
-#else
     flags =   G_APPLICATION_ALLOW_REPLACEMENT
             | G_APPLICATION_REPLACE
             | G_APPLICATION_HANDLES_OPEN;
-#endif
 
     player = player_init();
     if (!player) exit(EXIT_FAILURE);

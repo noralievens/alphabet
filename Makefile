@@ -208,8 +208,8 @@ deb: install
 
 $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png $(BIN_DIR)/$(TARGET)
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
-	mkdir -v    $(MAC_DIR)/$(NAME).iconset
-	mkdir -v 	$(MAC_DIR)/Contents/Resources/
+	mkdir -pv   $(MAC_DIR)/$(NAME).iconset
+	mkdir -pv 	$(MAC_DIR)/Contents/Resources/
 	sips -z 16 16     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_16x16.png
 	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_16x16@2x.png
 	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_32x32.png

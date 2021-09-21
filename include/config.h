@@ -14,7 +14,7 @@
 #define MARGIN      12
 
 #define WINDOW_X    720
-#define WINDOW_Y    480
+#define WINDOW_Y    400
 
 #define COLOR_TIMELINE_POSITION     "rgba(128,128,128,0.5)"
 #define COLOR_TIMELINE_LOOP         "rgba(0,128,0,0.25)"

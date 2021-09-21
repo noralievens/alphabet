@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <gtk/gtk.h>
-#include <locale.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -235,8 +234,6 @@ int window_run(int argc, char** argv)
 {
     int status, flags;
     GtkApplication* alphabet;
-
-    setlocale(LC_NUMERIC, "C");
 
     flags =   G_APPLICATION_ALLOW_REPLACEMENT
             | G_APPLICATION_REPLACE

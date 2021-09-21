@@ -164,11 +164,14 @@ void player_load_track(Player* this, Track* track, double position)
 
     g_snprintf(posstr,
             ELEMENTS(posstr),
-            "start=%d.%d,volume=%f",
+            "start=%d.%d,volume=%d.%d",
             (int)position,
             (int)(fmod(position, 1.0)*10000000),
-            volume
+            (int)volume,
+            (int)(fmod(volume, 1.0)*10000000)
     );
+
+    printf("posstr: %s\n", posstr);
 
     this->current = track;
 

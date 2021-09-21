@@ -76,26 +76,6 @@ DOXY_DIR  		= doxy
 
 
 ################################################################################
-# Gitignore
-
-define GIT_IGNORE
-$(TARGET)/
-$(TARGET).deb
-$(NAME).app
-
-bin/
-build/
-doxy/
-
-compile_commands.json
-.ccls-cache
-tags
-$(MAC_DIR)/$(NAME).icns
-endef
-export GIT_IGNORE
-
-
-################################################################################
 # Debian .deb
 #
 DEB_PKG 		= $(TARGET).deb
@@ -129,6 +109,27 @@ ifeq ($(OS),Darwin)
 	LIBS       += $(shell pkg-config --libs gtk-mac-integration-gtk3)
 	INCLUDES   += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
 endif
+
+
+################################################################################
+# Gitignore
+
+define GIT_IGNORE
+$(TARGET)/
+$(DEB_PKG)
+$(APP_PKG)
+
+$(BIN_DIR)/
+$(BUILD_DIR)/
+$(DOXY_DIR)/
+$(MAN_DIR)/
+
+compile_commands.json
+.ccls-cache
+tags
+$(MAC_DIR)/$(NAME).icns
+endef
+export GIT_IGNORE
 
 
 ################################################################################

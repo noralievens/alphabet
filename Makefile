@@ -127,7 +127,7 @@ $(MAN_DIR)/
 compile_commands.json
 .ccls-cache
 tags
-$(MAC_DIR)/$(NAME).icns
+$(MAC_DIR)/Contents/Resources/$(NAME).icns
 endef
 export GIT_IGNORE
 

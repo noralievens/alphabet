@@ -10,4 +10,4 @@ share/man/
 compile_commands.json
 .ccls-cache
 tags
-macosx/Alphabet.icns
+macosx/Contents/Resources/Alphabet.icns

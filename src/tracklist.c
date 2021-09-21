@@ -259,6 +259,8 @@ void tracklist_free(Tracklist* this)
     GtkTreeIter iter;
     GtkTreeSelection* selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
 
+    g_signal_handlers_disconnect_by_data(selection, this);
+
     gtk_tree_selection_get_selected(selection, &model, &iter);
 
     while (gtk_list_store_iter_is_valid(this->list, &iter)) {
@@ -282,12 +284,9 @@ void tracklist_free(Tracklist* this)
 
 void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection)
 {
-    if (!this->player) return;
-
     Track* track;
     GtkTreeIter iter;
     GtkTreeModel* model = GTK_TREE_MODEL(this->list);
-    g_signal_handlers_disconnect_by_data(selection, this);
 
     gtk_tree_selection_get_selected(selection, &model, &iter);
     if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;

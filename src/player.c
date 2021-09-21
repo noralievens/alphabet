@@ -171,8 +171,6 @@ void player_load_track(Player* this, Track* track, double position)
             (int)(fmod(volume, 1.0)*10000000)
     );
 
-    printf("posstr: %s\n", posstr);
-
     this->current = track;
 
     const char *cmd[] = {"loadfile", track->path, "replace", posstr, NULL};
@@ -197,9 +195,7 @@ int player_event_handler(Player* this)
 
                 } else if (g_strcmp0(prop->name, "core-idle") == 0) {
                     int core_idle = *(int*)(prop->data);
-                    if (this->current) {
-                        this->play_state = core_idle ? PLAY_STATE_PAUSE : PLAY_STATE_PLAY;
-                    }
+                    this->play_state = core_idle ? PLAY_STATE_PAUSE : PLAY_STATE_PLAY;
 
                 } else if (g_strcmp0(prop->name, "length") == 0) {
                     if (this->current) {

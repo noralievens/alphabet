@@ -49,7 +49,7 @@ APT_DEPS       += libavformat-dev libavutil-dev libsndfile1-dev
 ################################################################################
 # Brew
 #
-BREW            = pkg-config gtk+3 mpv libebur128 gtk-mac-integration
+BREW_DEPS       = pkg-config gtk+3 mpv libebur128 gtk-mac-integration ffmpeg
 
 
 ################################################################################

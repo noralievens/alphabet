@@ -234,9 +234,14 @@ int window_run(int argc, char** argv)
     int status, flags;
     GtkApplication* alphabet;
 
+
+#ifdef MAC_INTEGRATION
+    flags =   G_APPLICATION_HANDLES_OPEN;
+#else
     flags =   G_APPLICATION_ALLOW_REPLACEMENT
             | G_APPLICATION_REPLACE
             | G_APPLICATION_HANDLES_OPEN;
+#endif
 
     player = player_init();
     if (!player) exit(EXIT_FAILURE);

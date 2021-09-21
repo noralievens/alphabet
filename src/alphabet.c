@@ -38,8 +38,8 @@ static void on_activate(GtkApplication* alphabet);
 void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
 {
     for (gint i = 0; i < n_files; i++) {
-        /* must - cannot unref file?? */
         tracklist_add_file(tracklist, files[i]);
+        /* must - cannot unref file?? */
         /* g_object_unref(files[i]); */
     }
     on_activate(GTK_APPLICATION(alphabet));
@@ -63,8 +63,6 @@ gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
     timeline_free(timeline);
     varispeed_free(varispeed);
     player_free(player);
-    gtk_window_close(GTK_WINDOW(window));
-    /* g_application_quit(G_APPLICATION(alphabet)); */
     return TRUE;
 }
 

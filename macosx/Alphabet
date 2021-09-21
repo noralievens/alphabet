@@ -1,0 +1,13 @@
+#!/bin/sh
+
+name="$(basename "$0")"
+bundle="$(dirname "$0")"
+
+export GTK_THEME=mcOS11-GTK
+
+# Strip out the argument added by the OS.
+if /bin/expr "x$1" : '^x-psn_' > /dev/null; then
+    shift 1
+fi
+
+exec "$bundle/Contents/MacOs/$name-bin" "$@"

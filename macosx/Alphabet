@@ -1,13 +1,18 @@
 #!/bin/sh
 
-name="$(basename "$0")"
-bundle="$(dirname "$0")"
+bin_name="alphabet"
 
-export GTK_THEME=mcOS11-GTK
+name="$(basename "$0")"
+tmp="$0"
+tmp="$(dirname "$tmp")"
+tmp="$(dirname "$tmp")"
+bundle="$(dirname "$tmp")"
+
+export GTK_THEME=macOS-Dark-6.1-dark
 
 # Strip out the argument added by the OS.
 if /bin/expr "x$1" : '^x-psn_' > /dev/null; then
     shift 1
 fi
 
-exec "$bundle/Contents/MacOs/$name-bin" "$@"
+exec "$bundle/Contents/MacOs/$bin_name-bin" "$@"

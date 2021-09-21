@@ -100,8 +100,8 @@ export DEBIAN_CONTROL
 # MacOs .app
 #
 APP_PKG 		= $(NAME).app
-APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 MAC_DIR         = macosx
+APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 OS  			= $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
 
 ifeq ($(OS),Darwin)
@@ -219,7 +219,7 @@ $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png $(BIN_DIR)/$(TARGET)
 	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_256x256@2x.png
 	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_512x512.png
 	sips -z 1024 1024 $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_512x512@2x.png
-	iconutil -c icns -o $(MAC_DIR)/$(NAME).icns $(APP_ICON)
+	iconutil -c icns -o $(MAC_DIR)/Contents/Resources/$(NAME).icns $(APP_ICON)
 	rm -rv      $(MAC_DIR)/$(NAME).iconset
 
 app: $(MAC_DIR)/$(APPNAME).icns
@@ -228,12 +228,14 @@ app: $(MAC_DIR)/$(APPNAME).icns
 	mkdir -p    $(APP_PKG)/Contents/MacOs
 	echo "APPLAlphabet" \
 		      > $(APP_PKG)/Contents/PkgInfo
-	cp -fv		$(MAC_DIR)/Info.plist \
+	cp -fv		$(MAC_DIR)/Contents/Info.plist \
 				$(APP_PKG)/Contents/
-	cp -fv		$(MAC_DIR)/$(NAME).icns \
+	cp -fv		$(BIN_DIR)/$(TARGET) \
+				$(APP_PKG)/Contents/MacOs/$(TARGET)-bin
+	cp -fv		$(MAC_DIR)/Contents/MacOs/$(TARGET) \
+				$(APP_PKG)/Contents/MacOs/$(TARGET)
+	cp -fv		$(MAC_DIR)/Contents/Resources/$(NAME).icns \
 				$(APP_PKG)/Contents/Resources/
-	cp -fv		$(BIN_DIR)/* \
-				$(APP_PKG)/Contents/MacOs/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:

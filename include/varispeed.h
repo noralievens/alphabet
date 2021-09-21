@@ -18,6 +18,8 @@ extern Varispeed* varispeed_new(Player* player);
 
 extern void varispeed_free(Varispeed* this);
 
+extern void varispeed_free(Varispeed* this);
+
 #endif
 
 // vim:ft=c

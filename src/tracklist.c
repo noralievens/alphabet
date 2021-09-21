@@ -267,6 +267,8 @@ void tracklist_free(Tracklist* this)
         gtk_list_store_remove(this->list, &iter);
     }
 
+    this->player->current = NULL;
+
     gtk_widget_destroy(GTK_WIDGET(this->tree));
     g_object_unref(this->list);
     g_free(this);
@@ -280,9 +282,12 @@ void tracklist_free(Tracklist* this)
 
 void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection)
 {
+    if (!this->player) return;
+
     Track* track;
     GtkTreeIter iter;
     GtkTreeModel* model = GTK_TREE_MODEL(this->list);
+    g_signal_handlers_disconnect_by_data(selection, this);
 
     gtk_tree_selection_get_selected(selection, &model, &iter);
     if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;

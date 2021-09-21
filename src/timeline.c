@@ -113,3 +113,10 @@ Timeline* timeline_new(Player* player)
 
     return this;
 }
+
+void timeline_free(Timeline* this)
+{
+    if (!this) return;
+    gtk_widget_destroy(this->box);
+    free(this);
+}

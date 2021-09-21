@@ -18,9 +18,11 @@ typedef struct {
     GdkRGBA marker;
 } Timeline;
 
+extern Timeline* timeline_new(Player* player);
+
 extern void timeline_update(Timeline* this);
 
-extern Timeline* timeline_new(Player* player);
+extern void timeline_free(Timeline* this);
 
 #endif
 

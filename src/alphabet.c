@@ -18,7 +18,6 @@
 #endif
 
 #include "../include/config.h"
-#include "../include/config.h"
 #include "../include/counter.h"
 #include "../include/player.h"
 #include "../include/timeline.h"
@@ -59,11 +58,12 @@ gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer 
 
 gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
 {
-    printf("destroy_handler\n");
     tracklist_free(tracklist);
     transport_free(transport);
-    /* player_free(player); */
-    /* gtk_window_close(GTK_WINDOW(window)); */
+    timeline_free(timeline);
+    varispeed_free(varispeed);
+    player_free(player);
+    gtk_window_close(GTK_WINDOW(window));
     /* g_application_quit(G_APPLICATION(alphabet)); */
     return TRUE;
 }
@@ -244,8 +244,9 @@ int window_run(int argc, char** argv)
 
     alphabet = gtk_application_new( "org.gtk.alphabet", flags);
 
-    /* create here because "open" dependes on tracklist */
-    /* widgets are created later on in tracklist_init */
+    /* create here because "open" dependes on tracklist
+     * and open preceeds gui stuff
+     * widgets are created in on_active by calling tracklist_init */
     tracklist = tracklist_new(player);
 
     g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), tracklist->list);
@@ -255,7 +256,7 @@ int window_run(int argc, char** argv)
 
     g_application_quit(G_APPLICATION(alphabet));
 
-    player_free(player);
+    /* player_free(player); */
     return status;
 }
 

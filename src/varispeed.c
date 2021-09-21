@@ -26,10 +26,6 @@ static void on_value_changed(Varispeed* this, GtkSpinButton *spin_button)
     player_set_speed(this->player, value);
 }
 
-void varispeed_update(UNUSED Varispeed* this)
-{
-}
-
 Varispeed* varispeed_new(Player* player)
 {
     Varispeed* this = malloc(sizeof(Varispeed));
@@ -47,4 +43,16 @@ Varispeed* varispeed_new(Player* player)
 
     gtk_widget_show_all(this->box);
     return this;
+}
+
+void varispeed_update(UNUSED Varispeed* this)
+{
+}
+
+void varispeed_free(Varispeed* this)
+{
+    if (!this) return;
+
+    g_signal_handlers_disconnect_by_data(this->spin, this);
+    gtk_widget_destroy(this->box);
 }

@@ -57,7 +57,7 @@ void player_stop(Player* this)
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
         mpv_print_status(status);
     }
-    player_load_track(this, this->current, 0);
+    if (this->current) player_load_track(this, this->current, 0);
     player_pause(this);
     if (this->rtn) player_goto(this, 0);
 }
@@ -128,9 +128,9 @@ void player_mark(Player* this)
 
 void player_goto(Player* this, double position)
 {
+    if (!this->current) return;
     int status;
-    if (position > this->current->length) position = this->current->length;
-    if (position < 0) position = 0;
+    position = CLAMP(position, 0, this->current->length);
 
     char posstr[9];
     g_snprintf(posstr, ELEMENTS(posstr), "%f", position);
@@ -197,10 +197,14 @@ int player_event_handler(Player* this)
 
                 } else if (g_strcmp0(prop->name, "core-idle") == 0) {
                     int core_idle = *(int*)(prop->data);
-                    this->play_state = core_idle ? PLAY_STATE_PAUSE : PLAY_STATE_PLAY;
+                    if (this->current) {
+                        this->play_state = core_idle ? PLAY_STATE_PAUSE : PLAY_STATE_PLAY;
+                    }
 
                 } else if (g_strcmp0(prop->name, "length") == 0) {
-                    this->current->length = *(double*)(prop->data);
+                    if (this->current) {
+                        this->current->length = *(double*)(prop->data);
+                    }
                 }
                 break;
             }
@@ -276,7 +280,9 @@ Player* player_init()
 void player_free(Player* this)
 {
     if (!this) return;
+
     mpv_terminate_destroy(this->mpv);
+    if (this->current) free(this->current);
     free(this);
 }
 

@@ -51,7 +51,8 @@ gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer 
 {
     GFile* file = g_file_new_for_path(path);
     tracklist_add_file(tracklist, file);
-    g_object_unref(file);
+    /* TODO check unreffing GFile - cannot unref here because async add_file */
+    /* g_object_unref(file); */
     return TRUE;
 }
 #endif

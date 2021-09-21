@@ -26,7 +26,7 @@ INCLUDES	   += -I/usr/include/mpv
 
 CC           	= gcc
 CFLAGS		    = -DVERSION=\"$(VERSION)\"
-CFLAGS		   += -DDEBUG -g
+# CFLAGS		   += -DDEBUG -g
 CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS		   += -Wpointer-arith -Wcast-align -Wstrict-prototypes
 CFLAGS		   += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
@@ -49,7 +49,7 @@ APT_DEPS       += libavformat-dev libavutil-dev libsndfile1-dev
 ################################################################################
 # Brew
 #
-BREW            = pkg-config gtk+3 mpv libebur128 gtk-mac-integration
+BREW_DEPS       = pkg-config gtk+3 mpv libebur128 gtk-mac-integration ffmpeg
 
 
 ################################################################################
@@ -73,27 +73,6 @@ ICON_DIR 		= $(DATA_DIR)/icons
 #
 DOXY_CFG 		= $(DOC_DIR)/doxygen.cfg
 DOXY_DIR  		= doxy
-
-
-################################################################################
-# Gitignore
-
-define GIT_IGNORE
-$(TARGET)/
-$(TARGET).deb
-$(NAME).app
-
-bin/
-build/
-doxy/
-share/man/
-
-compile_commands.json
-.ccls-cache
-tags
-$(MAC_DIR)/$(NAME).icns
-endef
-export GIT_IGNORE
 
 
 ################################################################################
@@ -121,6 +100,7 @@ export DEBIAN_CONTROL
 # MacOs .app
 #
 APP_PKG 		= $(NAME).app
+APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 MAC_DIR         = macosx
 OS  			= $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
 
@@ -129,6 +109,27 @@ ifeq ($(OS),Darwin)
 	LIBS       += $(shell pkg-config --libs gtk-mac-integration-gtk3)
 	INCLUDES   += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
 endif
+
+
+################################################################################
+# Gitignore
+
+define GIT_IGNORE
+$(TARGET)/
+$(DEB_PKG)
+$(APP_PKG)
+
+$(BIN_DIR)/
+$(BUILD_DIR)/
+$(DOXY_DIR)/
+$(MAN_DIR)/
+
+compile_commands.json
+.ccls-cache
+tags
+$(MAC_DIR)/$(NAME).icns
+endef
+export GIT_IGNORE
 
 
 ################################################################################
@@ -208,30 +209,30 @@ deb: install
 $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png $(BIN_DIR)/$(TARGET)
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
 	mkdir -v    $(MAC_DIR)/$(NAME).iconset
-	OF=$(MAC_DIR)/$(NAME).iconset
-	sips -z 16 16     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_16x16.png
-	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_16x16@2x.png
-	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_32x32.png
-	sips -z 64 64     $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_32x32@2x.png
-	sips -z 128 128   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_128x128.png
-	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_128x128@2x.png
-	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_256x256.png
-	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_256x256@2x.png
-	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_512x512.png
-	sips -z 1024 1024 $(ICON_DIR)/$(TARGET).png --out $(OF)/.icon_512x512@2x.png
-	iconutil -c icns -o $(MAC_DIR)/$(NAME).icns $(OF)
+	sips -z 16 16     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_16x16.png
+	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_16x16@2x.png
+	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_32x32.png
+	sips -z 64 64     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_32x32@2x.png
+	sips -z 128 128   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_128x128.png
+	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_128x128@2x.png
+	sips -z 256 256   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_256x256.png
+	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_256x256@2x.png
+	sips -z 512 512   $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_512x512.png
+	sips -z 1024 1024 $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_512x512@2x.png
+	iconutil -c icns -o $(MAC_DIR)/$(NAME).icns $(APP_ICON)
 	rm -rv      $(MAC_DIR)/$(NAME).iconset
 
 app: $(MAC_DIR)/$(APPNAME).icns
 	rm -fr      $(APP_PKG)
 	mkdir -p    $(APP_PKG)/Contents/Resources
+	mkdir -p    $(APP_PKG)/Contents/MacOs
 	echo "APPLAlphabet" \
 		      > $(APP_PKG)/Contents/PkgInfo
 	cp -fv		$(MAC_DIR)/Info.plist \
 				$(APP_PKG)/Contents/
 	cp -fv		$(MAC_DIR)/$(NAME).icns \
 				$(APP_PKG)/Contents/Resources/
-	cp -fv		$(BIN_DIR)/$(TARGET) \
+	cp -fv		$(BIN_DIR)/* \
 				$(APP_PKG)/Contents/MacOs/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 

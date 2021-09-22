@@ -5,13 +5,14 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <locale.h>
+#include <math.h>
 #include <mpv/client.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 
 #include "../include/config.h"
 #include "../include/track.h"
@@ -250,6 +251,7 @@ Player* player_init()
     this->position = 0;
     this->rtn = 0;
 
+    setlocale(LC_NUMERIC, "C");
     this->mpv = mpv_create();
     if (!this->mpv) {
         fprintf(stderr, "failed creating context\n");

@@ -3,7 +3,6 @@
  * @file        : alphabet.c
  */
 
-#include <locale.h>
 #include <assert.h>
 #include <errno.h>
 #include <gtk/gtk.h>
@@ -51,7 +50,7 @@ static gboolean on_destroy(GtkWidget* window, GtkApplication* alphabet);
 /**
  * open files from cli args or filemanager files
  */
-static void on_open(GApplication *alphabet, GFile **files, gint n);
+static void on_open(GApplication *alphabet, GFile **files, gint n, const char* hint);
 
 /**
  * startup callback
@@ -237,7 +236,6 @@ void on_activate(GtkApplication* alphabet)
 
 void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
 {
-    setlocale(LC_NUMERIC, "C");
     player = player_init();
     if (!player) exit(EXIT_FAILURE);
 
@@ -247,7 +245,7 @@ void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
     tracklist = tracklist_new(player);
 }
 
-void on_open(GApplication *alphabet, GFile **files, gint n)
+void on_open(GApplication *alphabet, GFile **files, gint n, UNUSED const char* hint)
 {
     for (gint i = 0; i < n; i++) {
         tracklist_add_file(tracklist, files[i]);

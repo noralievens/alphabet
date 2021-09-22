@@ -34,21 +34,66 @@ Tracklist* tracklist;
 Transport* transport;
 Varispeed* varispeed;
 
+/**
+ * activate callback
+ *
+ * init all gtk widgets
+ */
 static void on_activate(GtkApplication* alphabet);
-static gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet);
-static void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint);
-static void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data);
 
+/**
+ * destroy callback
+ *
+ * cleanup
+ */
+static gboolean on_destroy(GtkWidget* window, GtkApplication* alphabet);
+
+/**
+ * open files from cli args or filemanager files
+ */
+static void on_open(GApplication *alphabet, GFile **files, gint n);
+
+/**
+ * startup callback
+ *
+ * init player and tracklist
+ */
+static void on_startup(GApplication* alphabet, gpointer data);
+
+/**
+ * update the UI elements
+ * no data is passed, just a trigger to update
+ */
+static gboolean update_ui(gpointer data);
+
+/**
+ * player event callback
+ *
+ * connect the player callback method to the player event
+ * called functions must be short and non-blocking
+ * wil be called whenever player changes state (eg, play, position update, ...)
+ */
+static void event_callback(gpointer data);
+
+/**
+ * open event for macos
+ *
+ * paths are conververted to GFile
+ */
 #ifdef MAC_INTEGRATION
-static gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data);
+static gboolean on_open_osx(GtkosxApplication* app, char* path, gpointer data);
 #endif
+
+
 
 void on_click_add(GtkWindow* window)
 {
     GtkFileChooserNative *chsr;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
 
-    chsr = gtk_file_chooser_native_new("Add file", window, action, "_Add", "_Cancel");
+    chsr = gtk_file_chooser_native_new(
+            "Add file", window, action, "_Add", "_Cancel");
+
     gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(chsr), TRUE);
 
     if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(chsr)) == GTK_RESPONSE_ACCEPT) {
@@ -110,11 +155,7 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event)
     return FALSE;
 }
 
-/**
- * update the UI elements
- * no data is passed, just a trigger to update
- */
-static gboolean update_ui(UNUSED gpointer data)
+gboolean update_ui(UNUSED gpointer data)
 {
     timeline_update(timeline);
     counter_update(counter);
@@ -122,14 +163,7 @@ static gboolean update_ui(UNUSED gpointer data)
     return FALSE;
 }
 
-/**
- * event callback
- *
- * connect the player callback method to the player event
- *
- * called functions must be short and non-blocking
- */
-static void event_callback(gpointer data)
+void event_callback(gpointer data)
 {
     g_idle_add(G_SOURCE_FUNC(player_event_handler), data);
     g_idle_add(G_SOURCE_FUNC(update_ui), data);
@@ -165,35 +199,31 @@ void on_activate(GtkApplication* alphabet)
     tracklist_init(tracklist);
     gtk_container_add(GTK_CONTAINER(scrolled), GTK_WIDGET(tracklist->tree));
 
-    /* button = gtk_button_new_with_mnemonic("_Add"); */
     button = gtk_button_new_from_icon_name("list-add-symbolic", ICON_SIZE);
     gtk_action_bar_pack_start(GTK_ACTION_BAR(bar), button);
-    g_signal_connect_swapped(button, "clicked", G_CALLBACK(on_click_add), window);
+    g_signal_connect_swapped(button, "clicked",
+            G_CALLBACK(on_click_add), window);
+
     gtk_widget_show_all(button);
 
     counter = counter_new(player);
-    /* gtk_box_pack_start(GTK_BOX(foo), counter->box, FALSE, FALSE, spacing*2); */
     gtk_action_bar_pack_start(GTK_ACTION_BAR(bar), counter->box);
-    /* gtk_widget_set_margin_start(counter->box, MARGIN/2); */
 
     timeline = timeline_new(player);
-    /* gtk_box_pack_start(GTK_BOX(foo), timeline->box, TRUE, TRUE, spacing*2); */
     gtk_action_bar_pack_start(GTK_ACTION_BAR(bar), timeline->box);
 
     varispeed = varispeed_new(player);
-    /* gtk_box_pack_start(GTK_BOX(foo), varispeed->box, FALSE, FALSE, spacing*2); */
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), varispeed->box);
-    /* gtk_widget_set_margin_start(varispeed->box, MARGIN/2); */
-    /* gtk_widget_set_margin_end(varispeed->box, MARGIN/2); */
 
     transport = transport_new(player);
-    /* gtk_box_pack_end(GTK_BOX(foo),  transport->box, FALSE, FALSE, spacing*2); */
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), transport->box_control);
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), transport->box_movement);
 
     gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    g_signal_connect(window, "key_press_event", G_CALLBACK(keypress_handler), NULL);
-    g_signal_connect(window, "destroy", G_CALLBACK(on_destroy), alphabet);
+    g_signal_connect(window, "key_press_event",
+            G_CALLBACK(keypress_handler), NULL);
+    g_signal_connect(window, "destroy",
+            G_CALLBACK(on_destroy), alphabet);
 
     /* event_callback will be called whenever player received event */
     player_set_event_callback(player, event_callback);
@@ -217,10 +247,9 @@ void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
     tracklist = tracklist_new(player);
 }
 
-void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
+void on_open(GApplication *alphabet, GFile **files, gint n)
 {
-    printf("hint: %s\n", hint);
-    for (gint i = 0; i < n_files; i++) {
+    for (gint i = 0; i < n; i++) {
         tracklist_add_file(tracklist, files[i]);
         /* must - cannot unref file?? */
         /* g_object_unref(files[i]); */

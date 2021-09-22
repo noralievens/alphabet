@@ -119,6 +119,7 @@ define GIT_IGNORE
 $(TARGET)/
 $(DEB_PKG)
 $(APP_PKG)
+*.dmg
 
 $(BIN_DIR)/
 $(BUILD_DIR)/
@@ -214,7 +215,7 @@ deb: install
 	dpkg-deb --build $(TARGET) $(DEB_PKG)
 	@printf "\e[0;32m%s\e[0m\n" "built $(DEB_PKG)"
 
-$(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png $(BIN_DIR)/$(TARGET)
+$(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
 	mkdir -pv   $(MAC_DIR)/$(NAME).iconset
 	mkdir -pv 	$(MAC_DIR)/Contents/Resources/
@@ -231,20 +232,16 @@ $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png $(BIN_DIR)/$(TARGET)
 	iconutil -c icns -o $(MAC_DIR)/Contents/Resources/$(NAME).icns $(APP_ICON)
 	rm -rv      $(MAC_DIR)/$(NAME).iconset
 
-app: $(MAC_DIR)/$(APPNAME).icns
+app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	rm -fr      $(APP_PKG)
-	mkdir -p    $(APP_PKG)/Contents/Resources
-	mkdir -p    $(APP_PKG)/Contents/MacOs
-	echo "APPLAlphabet" \
-		      > $(APP_PKG)/Contents/PkgInfo
-	cp -fv		$(MAC_DIR)/Contents/Info.plist \
-				$(APP_PKG)/Contents/
+	cp -fvr 	$(MAC_DIR) \
+				$(APP_PKG)
 	cp -fv		$(BIN_DIR)/$(TARGET) \
 				$(APP_PKG)/Contents/MacOs/$(TARGET)-bin
-	cp -fv		$(MAC_DIR)/Contents/MacOs/$(TARGET) \
-				$(APP_PKG)/Contents/MacOs/$(TARGET)
-	cp -fv		$(MAC_DIR)/Contents/Resources/$(NAME).icns \
-				$(APP_PKG)/Contents/Resources/
+	dylibbundler -od -b -x \
+				$(APP_PKG)/Contents/MacOS/$(TARGET)-bin -d \
+				$(APP_PKG)/Contents/Resources/lib
+	create-dmg 	$(APP_PKG) .
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:

@@ -3,6 +3,7 @@
  * @file        : alphabet.c
  */
 
+#include <locale.h>
 #include <assert.h>
 #include <errno.h>
 #include <gtk/gtk.h>
@@ -34,37 +35,13 @@ Transport* transport;
 Varispeed* varispeed;
 
 static void on_activate(GtkApplication* alphabet);
-
-void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
-{
-    for (gint i = 0; i < n_files; i++) {
-        tracklist_add_file(tracklist, files[i]);
-        /* must - cannot unref file?? */
-        /* g_object_unref(files[i]); */
-    }
-    on_activate(GTK_APPLICATION(alphabet));
-}
+static gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet);
+static void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint);
+static void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data);
 
 #ifdef MAC_INTEGRATION
-gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
-{
-    GFile* file = g_file_new_for_path(path);
-    tracklist_add_file(tracklist, file);
-    /* TODO check unreffing GFile - cannot unref here because async add_file */
-    /* g_object_unref(file); */
-    return TRUE;
-}
+static gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data);
 #endif
-
-gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
-{
-    tracklist_free(tracklist);
-    transport_free(transport);
-    timeline_free(timeline);
-    varispeed_free(varispeed);
-    player_free(player);
-    return TRUE;
-}
 
 void on_click_add(GtkWindow* window)
 {
@@ -228,7 +205,51 @@ void on_activate(GtkApplication* alphabet)
 #endif
 }
 
-int window_run(int argc, char** argv)
+void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
+{
+    setlocale(LC_NUMERIC, "C");
+    player = player_init();
+    if (!player) exit(EXIT_FAILURE);
+
+    /* create tracklist here because "open" dependes on tracklist
+     * on_open is called before activate
+     * widgets are created in on_active by calling tracklist_init */
+    tracklist = tracklist_new(player);
+}
+
+void on_open(GApplication *alphabet, GFile **files, gint n_files, UNUSED const gchar *hint)
+{
+    printf("hint: %s\n", hint);
+    for (gint i = 0; i < n_files; i++) {
+        tracklist_add_file(tracklist, files[i]);
+        /* must - cannot unref file?? */
+        /* g_object_unref(files[i]); */
+    }
+    on_activate(GTK_APPLICATION(alphabet));
+}
+
+#ifdef MAC_INTEGRATION
+gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
+{
+    GFile* file = g_file_new_for_path(path);
+    tracklist_add_file(tracklist, file);
+    /* TODO check unreffing GFile - cannot unref here because async add_file */
+    /* g_object_unref(file); */
+    return TRUE;
+}
+#endif
+
+gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
+{
+    tracklist_free(tracklist);
+    transport_free(transport);
+    timeline_free(timeline);
+    varispeed_free(varispeed);
+    player_free(player);
+    return TRUE;
+}
+
+int main(int argc, char *argv[])
 {
     int status, flags;
     GtkApplication* alphabet;
@@ -237,18 +258,11 @@ int window_run(int argc, char** argv)
             | G_APPLICATION_REPLACE
             | G_APPLICATION_HANDLES_OPEN;
 
-    player = player_init();
-    if (!player) exit(EXIT_FAILURE);
+    alphabet = gtk_application_new("org.gtk.alphabet", flags);
 
-    alphabet = gtk_application_new( "org.gtk.alphabet", flags);
-
-    /* create here because "open" dependes on tracklist
-     * and open preceeds gui stuff
-     * widgets are created in on_active by calling tracklist_init */
-    tracklist = tracklist_new(player);
-
-    g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), tracklist->list);
-    g_signal_connect(alphabet, "open", G_CALLBACK(on_open), tracklist->list);
+    g_signal_connect(alphabet, "startup", G_CALLBACK(on_startup), NULL);
+    g_signal_connect(alphabet, "open", G_CALLBACK(on_open), NULL);
+    g_signal_connect(alphabet, "activate", G_CALLBACK(on_activate), NULL);
 
     status = g_application_run(G_APPLICATION(alphabet), argc, argv);
 
@@ -256,9 +270,4 @@ int window_run(int argc, char** argv)
 
     /* player_free(player); */
     return status;
-}
-
-int main(int argc, char *argv[])
-{
-    return window_run(argc - optind, argv);
 }

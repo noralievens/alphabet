@@ -11,6 +11,7 @@ VERSION      	= 0.1
 AUTHOR       	= arnolievens@gmail.com
 DATE         	= July 2021
 
+
 ################################################################################
 # Build
 #
@@ -135,9 +136,16 @@ export GIT_IGNORE
 ################################################################################
 # Targets
 #
-.PHONY: all ctags gitignore man doxy install uninstall deb app apt brew clean
+.PHONY: all init ctags gitignore man doxy install uninstall deb app apt brew clean
 
 all: $(BIN_DIR)/$(TARGET)
+
+init:
+	mkdir -pv 	$(SRC_DIR)
+	mkdir -pv 	$(INC_DIR)
+	mkdir -pv 	$(DOC_DIR)
+	mkdir -pv 	$(DATA_DIR)
+	doxygen -g  $(DOXY_CFG)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	mkdir -p $(dir $@)

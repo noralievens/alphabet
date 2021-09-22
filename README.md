@@ -1,5 +1,13 @@
 # Alphabet
 
-nasty oneliner for otools
+### install
+    make install
 
-for file in $(otool -L bin/alphabet); do echo $file | grep "^/" | grep -v "/usr/lib\|/System" | xargs -I{} cp {} testotool/ ; done
+### .app bundle
+    make app
+
+### .deb pkg
+    make deb
+
+### makefile help
+    make help

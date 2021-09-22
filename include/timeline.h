@@ -48,5 +48,3 @@ extern void timeline_update(Timeline* this);
 extern void timeline_free(Timeline* this);
 
 #endif
-
-/* vim:ft=c */

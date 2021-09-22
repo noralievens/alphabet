@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : varispeed.h
- * @brief       : varispeed widget
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        varispeed.h
+ * @brief       varispeed widget
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef VARISPEED_H
@@ -35,5 +35,3 @@ extern Varispeed* varispeed_new(Player* player);
 extern void varispeed_free(Varispeed* this);
 
 #endif
-
-/** vim:ft=c */

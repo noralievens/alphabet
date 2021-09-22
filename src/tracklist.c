@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : tracklist.c
- * @brief       : track storage and file-manager-like widget
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        tracklist.c
+ * @brief       track storage and file-manager-like widget
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #include <assert.h>

@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : config.c
- * @brief       : config veriables and common helper functions
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        config.c
+ * @brief       config veriables and common helper functions
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #include <assert.h>

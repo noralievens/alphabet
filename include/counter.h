@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : counter.h
- * @brief       : time counter widget
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        counter.h
+ * @brief       time counter widget
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef COUNTER_H
@@ -46,5 +46,3 @@ extern void counter_update(Counter* this);
 extern void counter_free(Counter* this);
 
 #endif
-
-/* vim:ft=c */

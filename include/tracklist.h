@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : tracklist.h
- * @brief       : track storage and file-manager-like widget
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        tracklist.h
+ * @brief       track storage and file-manager-like widget
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef TRACK_LIST_H
@@ -101,5 +101,3 @@ extern Track* tracklist_file_to_track(Tracklist* this, GFile* file);
 extern void tracklist_free(Tracklist* this);
 
 #endif
-
-/* vim:ft=c */

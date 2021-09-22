@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : track.h
- * @brief       : track class
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        track.h
+ * @brief       track class
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef TRACK_H
@@ -50,5 +50,3 @@ extern void track_print(Track* this);
 extern void track_free(Track* this);
 
 #endif
-
-/* vim:ft=c */

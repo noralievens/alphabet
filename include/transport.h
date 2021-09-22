@@ -1,9 +1,9 @@
 /**
- * @author      : Arno Lievens (arnolievens@gmail.com)
- * @date        : 08/09/2021
- * @file        : transport.h
- * @brief       : transport buttons widget
- * @copyright   : Copyright (c) 2021 Arno Lievens
+ * @author      Arno Lievens (arnolievens@gmail.com)
+ * @date        08/09/2021
+ * @file        transport.h
+ * @brief       transport buttons widget
+ * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef TRANSPORT_H
@@ -60,5 +60,3 @@ extern void transport_update(Transport* this);
 extern void transport_free(Transport* this);
 
 #endif
-
-/* vim:ft=c */

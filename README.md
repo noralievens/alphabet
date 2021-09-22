@@ -1,7 +1,7 @@
 # Alphabet
 
 ### doc
-    [manual] (/doc/alphabet.md)
+[manual] (doc/alphabet.md)
 
 ### install
     make install

@@ -118,6 +118,7 @@ define GIT_IGNORE
 $(TARGET)/
 $(DEB_PKG)
 $(APP_PKG)
+*.dmg
 
 $(BIN_DIR)/
 $(BUILD_DIR)/
@@ -232,6 +233,7 @@ app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	dylibbundler -od -b -x \
 				$(APP_PKG)/Contents/MacOS/$(TARGET)-bin -d \
 				$(APP_PKG)/Contents/Resources/lib
+	create-dmg 	$(APP_PKG) .
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:

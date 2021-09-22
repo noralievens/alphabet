@@ -1,6 +1,7 @@
 alphabet/
 alphabet.deb
 Alphabet.app
+*.dmg
 
 bin/
 build/

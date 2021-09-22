@@ -1,6 +1,9 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
+ * @date        : 08/09/2021
  * @file        : tracklist.c
+ * @brief       : track storage and file-manager-like widget
+ * @copyright   : Copyright (c) 2021 Arno Lievens
  */
 
 #include <assert.h>
@@ -16,7 +19,6 @@
 #include "../include/config.h"
 #include "../include/player.h"
 #include "../include/track.h"
-
 #include "../include/tracklist.h"
 
 /* static gboolean (*GtkTreeViewSearchEqualFunc) (GtkTreeModel *model, gint column, const gchar *key, GtkTreeIter *iter, gpointer search_data) */

@@ -1,6 +1,9 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
+ * @date        : 08/09/2021
  * @file        : tracklist.h
+ * @brief       : track storage and file-manager-like widget
+ * @copyright   : Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef TRACK_LIST_H
@@ -35,7 +38,7 @@ typedef struct {
  * call init to create the actual tree
  *
  * @param player reference to the player object used to playstart selected row
- * @return Tracklist newly create object
+ * @return Tracklist newly created object
  */
 extern Tracklist* tracklist_new(Player* player);
 
@@ -75,6 +78,17 @@ extern void tracklist_add_file(Tracklist* this, GFile* file);
 extern void tracklist_remove_selected(Tracklist* this);
 
 /**
+ * Create a new track from file
+ *
+ * tracklist_add_file calls this function in a threadpool
+ * return track free-ed by tracklist_free or track_free
+ *
+ * @param file the file used to create a track
+ * @return the newly created track or NULL
+ */
+extern Track* tracklist_file_to_track(Tracklist* this, GFile* file);
+
+/**
  * Free all resources
  *
  * this includes:
@@ -86,18 +100,6 @@ extern void tracklist_remove_selected(Tracklist* this);
  */
 extern void tracklist_free(Tracklist* this);
 
-/**
- * Create a new track from file
- *
- * tracklist_add_file calls this function in a threadpool
- * return track free-ed by tracklist_free or track_free
- *
- * @param file the file used to create a track
- * @return the newly created track or NULL
- */
-extern Track* tracklist_file_to_track(Tracklist* this, GFile* file);
-
 #endif
 
-// vim:ft=c
-
+/* vim:ft=c */

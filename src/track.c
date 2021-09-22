@@ -1,6 +1,9 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
+ * @date        : 08/09/2021
  * @file        : track.c
+ * @brief       : track class
+ * @copyright   : Copyright (c) 2021 Arno Lievens
  */
 
 #include <assert.h>
@@ -17,6 +20,7 @@
 #include <unistd.h>
 
 #include "../include/config.h"
+
 #include "../include/track.h"
 
 static char* stralloc(const char* src);

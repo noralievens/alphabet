@@ -1,6 +1,9 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
+ * @date        : 08/09/2021
  * @file        : player.h
+ * @brief       : mpv wrapper
+ * @copyright   : Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef PLAYER_H
@@ -61,5 +64,4 @@ extern void player_free(Player* this);
 
 #endif
 
-// vim:ft=c
-
+/* vim:ft=c */

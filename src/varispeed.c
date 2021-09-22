@@ -1,8 +1,10 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
+ * @date        : 08/09/2021
  * @file        : varispeed.c
+ * @brief       : varispeed widget
+ * @copyright   : Copyright (c) 2021 Arno Lievens
  */
-
 
 #include <assert.h>
 #include <errno.h>

@@ -1,6 +1,9 @@
 /**
  * @author      : Arno Lievens (arnolievens@gmail.com)
+ * @date        : 08/09/2021
  * @file        : track.h
+ * @brief       : track class
+ * @copyright   : Copyright (c) 2021 Arno Lievens
  */
 
 #ifndef TRACK_H
@@ -35,18 +38,17 @@ typedef struct Track {
 extern Track* track_new(const char* name, const char* path);
 
 /**
+ * Print all track properties
+ */
+
+extern void track_print(Track* this);
+/**
  * Free all resources
  *
  * @param this the track object
  */
 extern void track_free(Track* this);
 
-/**
- * Print all track properties
- */
-extern void track_print(Track* this);
-
 #endif
 
-// vim:ft=c
-
+/* vim:ft=c */

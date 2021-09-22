@@ -237,6 +237,8 @@ app: $(MAC_DIR)/$(APPNAME).icns
 				$(APP_PKG)/Contents/MacOs/$(TARGET)
 	cp -fv		$(MAC_DIR)/Contents/Resources/$(NAME).icns \
 				$(APP_PKG)/Contents/Resources/
+	dylibbundler -od -b -x $(APP_PKG)/Contents/MacOS/$(TARGET)-bin \
+						-d $(APP_PKG)/Contents/libs
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:

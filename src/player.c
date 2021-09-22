@@ -37,7 +37,7 @@
 
 /* static double volume_to_db(double volume); */
 static double db_to_volume(double volume);
-static void mpv_print_status(int status);
+static void mpv_print_status(const char* cmd, int status);
 
 void player_set_speed(Player* this, gdouble speed)
 {
@@ -46,7 +46,7 @@ void player_set_speed(Player* this, gdouble speed)
     this->speed = speed;
 
     if ((status = mpv_set_property(this->mpv, "speed", MPV_FORMAT_DOUBLE, &this->speed)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("speed", status);
     }
 }
 
@@ -55,7 +55,7 @@ void player_stop(Player* this)
     int status;
     const char* cmd[] = {"stop", NULL};
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("stop", status);
     }
     if (this->current) player_load_track(this, this->current, 0);
     player_pause(this);
@@ -68,7 +68,7 @@ void player_pause(Player* this)
     int pause = 1;
 
     if ((status = mpv_set_property(this->mpv, "pause", MPV_FORMAT_FLAG, &pause)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("pause", status);
     }
     if (this->rtn) player_goto(this, 0);
 }
@@ -80,7 +80,7 @@ void player_toggle(Player* this)
 
     const char* cmd[] = {"cycle", "pause", NULL};
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("cycle, pause", status);
     }
     if (this->rtn) player_goto(this, 0);
 }
@@ -92,7 +92,7 @@ void player_seek(Player* this, double secs)
     sprintf(secstr, "%f", secs);
     const char* cmd[] = {"seek", secstr, NULL};
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("seek", status);
     }
 }
 
@@ -117,7 +117,7 @@ void player_loop(Player* this)
     }
 
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("ab-loop", status);
     }
 }
 
@@ -137,7 +137,7 @@ void player_goto(Player* this, double position)
 
     const char* cmd[] = {"seek", posstr, "absolute+keyframes", NULL};
     if ((status = mpv_command_async(this->mpv, 0, cmd)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("seek", status);
     }
 }
 
@@ -175,7 +175,7 @@ void player_load_track(Player* this, Track* track, double position)
 
     const char *cmd[] = {"loadfile", track->path, "replace", posstr, NULL};
     if ((status = mpv_command_async(this->mpv, 0, cmd)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("loadfile", status);
     }
 }
 
@@ -225,7 +225,7 @@ void player_set_gain(Player* this, double gain)
     int status;
 
     if ((status = mpv_set_property(this->mpv, "replaygain-preamp", MPV_FORMAT_DOUBLE, &gain)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("replay-gain-preamp", status);
     }
 }
 
@@ -237,8 +237,8 @@ void player_set_event_callback(Player* this, void(*event_callback)(void*))
 Player* player_init()
 {
     int status;
-    int pitch_correction = 0;
-    /* const char* replay_gain = "track"; */
+    int false = 0;
+    /* int true = 1; */
 
     Player* this = malloc(sizeof(Player));
 
@@ -259,16 +259,16 @@ Player* player_init()
     mpv_observe_property(this->mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
 	mpv_observe_property(this->mpv, 0, "length", MPV_FORMAT_DOUBLE);
 
-    if ((status = mpv_set_property(this->mpv, "audio-pitch-correction", MPV_FORMAT_FLAG, &pitch_correction)) < 0) {
-        mpv_print_status(status);
+    if ((status = mpv_set_property(this->mpv, "audio-pitch-correction", MPV_FORMAT_FLAG, &false)) < 0) {
+        mpv_print_status("audio-pitch-correction", status);
     }
 
-    /* if ((status = mpv_set_property(this->mpv, "replaygain", MPV_FORMAT_STRING, &replay_gain)) < 0) { */
-    /*     mpv_print_status(status); */
-    /* } */
+    if ((status = mpv_set_property(this->mpv, "audio-display", MPV_FORMAT_FLAG, &false)) < 0) {
+        mpv_print_status("audio-display", status);
+    }
 
     if ((status = mpv_initialize(this->mpv)) < 0) {
-        mpv_print_status(status);
+        mpv_print_status("initialize", status);
     }
     return this;
 }
@@ -292,8 +292,9 @@ double db_to_volume(double db)
     return exp(log(10.0)*(db/60.0 + 2));
 }
 
-void mpv_print_status(int status)
+void mpv_print_status(const char* cmd, int status)
 {
-    fprintf(stderr, "mpv error: %s\n", mpv_error_string(status));
+    fprintf(stderr, "mpv error for command: \"%s\"\n > %s\n",
+            cmd, mpv_error_string(status));
 }
 

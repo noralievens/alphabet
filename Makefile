@@ -80,7 +80,7 @@ DOXY_DIR  		= doxy
 # Debian .deb
 #
 DEB_PKG 		= $(TARGET).deb
-dpkg: PREFIX    = $(TARGET)/usr/local
+deb: PREFIX    = $(TARGET)/usr/local
 
 define DEBIAN_CONTROL
 Package: $(TARGET)

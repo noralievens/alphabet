@@ -1,6 +1,6 @@
 ################################################################################
 # @author       : Arno Lievens (arnolievens@gmail.com)
-# @date         : Sunday Jun 27, 2021 09:37:42 CEST
+# @date         : 08/09/2021
 # @file         : Makefile
 # @copyright    : Copyright (c) 2021 Arno Lievens
 #
@@ -9,8 +9,9 @@ NAME 		 	= Alphabet
 DESCRIPTION  	= audioplayer
 VERSION      	= 0.1
 AUTHOR       	= arnolievens@gmail.com
-DATE         	= July 2021
+DATE         	= 08/09/2021
 
+include config.mk
 
 ################################################################################
 # Build
@@ -18,12 +19,8 @@ DATE         	= July 2021
 SOURCES         = $(shell find $(SRC_DIR) -name *.c)
 HEADERS         = $(shell find $(INC_DIR) -name *.h)
 OBJECTS         = $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
-LIBS         	= $(shell pkg-config --libs gtk+-3.0 mpv libebur128 )
-LIBS           += $(shell pkg-config --libs libavformat libavutil sndfile)
-LIBS		   += -lm
-INCLUDES     	= $(shell pkg-config --cflags gtk+-3.0 mpv libebur128)
-INCLUDES       += $(shell pkg-config --cflags libavformat libavutil sndfile)
-INCLUDES	   += -I/usr/include/mpv
+LIBS           +=
+INCLUDES       +=
 
 CC           	= gcc
 CFLAGS		    = -DVERSION=\"$(VERSION)\"
@@ -38,19 +35,6 @@ CFLAGS		   += -Wunreachable-code
 
 CTAGS  	        = ctags
 CTAGSFLAGS      =
-
-
-################################################################################
-# Apt
-#
-APT_DEPS        = libgtk-3-dev libmpv-dev libebur128-dev
-APT_DEPS       += libavformat-dev libavutil-dev libsndfile1-dev
-
-
-################################################################################
-# Brew
-#
-BREW_DEPS       = pkg-config gtk+3 mpv libebur128 gtk-mac-integration ffmpeg
 
 
 ################################################################################
@@ -80,7 +64,7 @@ DOXY_DIR  		= doxy
 # Debian .deb
 #
 DEB_PKG 		= $(TARGET).deb
-deb: PREFIX    = $(TARGET)/usr/local
+deb: PREFIX     = $(TARGET)/usr/local
 
 define DEBIAN_CONTROL
 Package: $(TARGET)
@@ -90,7 +74,7 @@ priority: optional
 architecture: all
 essential: no
 installed-size: 1024
-Depends: $(DEPENDENCIES)
+Depends: $(DEB_DEPS)
 maintainer: $(AUTHOR)
 description: $(DESCRIPTION)
 endef
@@ -103,13 +87,6 @@ export DEBIAN_CONTROL
 APP_PKG 		= $(NAME).app
 MAC_DIR         = macosx
 APP_ICON        = $(MAC_DIR)/$(NAME).iconset
-OS  			= $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
-
-ifeq ($(OS),Darwin)
-	CFLAGS     += -DMAC_INTEGRATION
-	LIBS       += $(shell pkg-config --libs gtk-mac-integration-gtk3)
-	INCLUDES   += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
-endif
 
 
 ################################################################################
@@ -137,7 +114,8 @@ export GIT_IGNORE
 ################################################################################
 # Targets
 #
-.PHONY: all init ctags gitignore man doxy install uninstall deb app apt brew clean
+.PHONY: 	all init ctags gitignore man doxy install uninstall \
+			deb app apt brew clean
 
 all: $(BIN_DIR)/$(TARGET)
 
@@ -268,6 +246,7 @@ help:
 	@echo
 	@echo 'usage: make <TARGET>'
 	@echo '  all         compile and link'
+	@echo '  init        create default directories'
 	@echo '  ctags       create ctags for VI editor'
 	@echo '  gitignore   create default .gitignore file'
 	@echo '  man         convert doc/$(TARGET).md to manpage'

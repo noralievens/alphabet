@@ -10,8 +10,9 @@ DESCRIPTION  	= audioplayer
 VERSION      	= 0.1
 AUTHOR       	= arnolievens@gmail.com
 DATE         	= 08/09/2021
+CONFIG 			= config.mk
 
-include config.mk
+include $(CONFIG)
 
 ################################################################################
 # Build
@@ -65,6 +66,7 @@ DOXY_DIR  		= doxy
 #
 DEB_PKG 		= $(TARGET).deb
 deb: PREFIX     = $(TARGET)/usr/local
+deb: SIZE       = $(shell du -s alphabet/ | cut -f 1)
 
 define DEBIAN_CONTROL
 Package: $(TARGET)
@@ -73,7 +75,7 @@ section: custom
 priority: optional
 architecture: all
 essential: no
-installed-size: 1024
+installed-size: $(SIZE)
 Depends: $(DEB_DEPS)
 maintainer: $(AUTHOR)
 description: $(DESCRIPTION)
@@ -119,15 +121,8 @@ export GIT_IGNORE
 
 all: $(BIN_DIR)/$(TARGET)
 
-init:
-	mkdir -pv 	$(SRC_DIR)
-	mkdir -pv 	$(INC_DIR)
-	mkdir -pv 	$(DOC_DIR)
-	mkdir -pv 	$(DATA_DIR)
-	doxygen -g  $(DOXY_CFG)
-
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(dir $@)
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@ -I$(INCLUDES)
 
 $(BIN_DIR)/$(TARGET): $(OBJECTS)
@@ -136,6 +131,15 @@ $(BIN_DIR)/$(TARGET): $(OBJECTS)
 
 ctags: $(HEADERS) $(SOURCES)
 	$(CTAGS) $(CTAGSFLAGS) $(HEADERS) $(SOURCES)
+
+init:
+	mkdir -pv 	$(SRC_DIR)
+	mkdir -pv 	$(INC_DIR)
+	mkdir -pv 	$(DOC_DIR)
+	mkdir -pv 	$(DATA_DIR)
+	doxygen -g  $(DOXY_CFG)
+	touch 	 	$(CONFIG)
+	@printf "\e[0;32m%s\e[0m\n" "init complete"
 
 gitignore:
 	@echo "$$GIT_IGNORE" > .gitignore

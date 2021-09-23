@@ -37,7 +37,7 @@ endif
 # Debian .deb
 #
 DEB_DEPS        = libgtk-3-0, libmpv1, libebur128-1,
-DEB_DEPS       += libavformat56, libavutil56, libsndfile1
+DEB_DEPS       += libavformat58, libavutil56, libsndfile1
 
 
 ################################################################################

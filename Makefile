@@ -162,9 +162,9 @@ man:
 		"% $(AUTHOR)" \
 		"% $(DATE)" > ./$(DOC_DIR)/$(TARGET).tmp
 	pandoc      $(DOC_DIR)/$(TARGET).tmp \
-		        $(DOC_DIR)/$(TARGET).md \
+				$(DOC_DIR)/$(TARGET).md \
 				-s -t man -o \
-		        $(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
+				$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	rm -fv      $(DOC_DIR)/$(TARGET).tmp
 	@printf "\e[0;32m%s\e[0m\n" "generated manpage in ./$(MAN_DIR)"
 
@@ -176,7 +176,7 @@ doxy:
 install: all man
 	mkdir -pv   $(PREFIX)/$(BIN_DIR)
 	cp -fv      $(BIN_DIR)/$(TARGET) \
-	            $(PREFIX)/$(BIN_DIR)/$(TARGET)
+				$(PREFIX)/$(BIN_DIR)/$(TARGET)
 	chmod 755   $(PREFIX)/$(BIN_DIR)/$(TARGET)
 	mkdir -pv   $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)
 	cp -fv      $(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1 \
@@ -184,7 +184,7 @@ install: all man
 	chmod 644   $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	mkdir -pv   $(PREFIX)/$(ICON_DIR)/$(TARGET)
 	cp -rfv     $(ICON_DIR) \
-	            $(PREFIX)/$(ICON_DIR)
+				$(PREFIX)/$(ICON_DIR)
 ifeq ($(OS),Linux)
 	mkdir -pv   $(PREFIX)/$(DESKTOP_DIR)
 	cp -fv      $(DESKTOP_DIR)/$(TARGET).desktop \

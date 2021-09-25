@@ -103,7 +103,6 @@ APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 # Gitignore
 
 define GIT_IGNORE
-$(TARGET)/
 $(DEB_PKG)
 $(APP_PKG)
 *.dmg

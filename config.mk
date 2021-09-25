@@ -28,6 +28,7 @@ endif
 ################################################################################
 # Cflags
 #
+CFLAGS 		   += "-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
 ifeq ($(OS),Darwin)
 	CFLAGS     += -DMAC_INTEGRATION
 endif

@@ -45,6 +45,14 @@ static void tracklist_load_async(gpointer data, gpointer user_data);
  */
 
 
+
+
+
+
+static GtkTargetEntry entries[] = {
+  { (char*)"GTK_TREE_MODEL_ROW", GTK_TARGET_OTHER_APP, 0 }
+};
+
 Tracklist* tracklist_new(Player* player)
 {
     GError* err = NULL;
@@ -71,6 +79,71 @@ Tracklist* tracklist_new(Player* player)
     }
 
     return this;
+}
+
+static const char *css =
+  ".drag-icon { "
+  "  background: white; "
+  "  border: 1px solid black; "
+  "}";
+
+void
+drag_data_get (GtkWidget        *widget,
+               GdkDragContext   *context,
+               GtkSelectionData *selection_data,
+               guint             info,
+               guint             time,
+               gpointer          data)
+{
+    printf("get\n");
+}
+
+static void drag_begin (GtkTreeView *tree, GdkDragContext *context, Tracklist* this)
+{
+    printf("begin\n");
+    GtkTreeIter iter;
+    GtkTreeModel* model;
+
+    gtk_tree_selection_get_selected(gtk_tree_view_get_selection(this->tree), &model, &iter);
+    /* if (!gtk_list_store_iter_is_valid(this->list, &iter)) return; */
+    g_signal_connect(GTK_WIDGET(), "drag-data-get", G_CALLBACK (drag_data_get), NULL);
+    /* GtkWidget *row; */
+    /* GtkAllocation alloc; */
+    /* cairo_surface_t *surface; */
+    /* cairo_t *cr; */
+    /* int x, y; */
+    /* double sx, sy; */
+    /*  */
+    /* row = gtk_widget_get_ancestor(widget, GTK_TYPE_LIST_BOX_ROW); */
+    /* gtk_widget_get_allocation(row, &alloc); */
+    /* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, alloc.width, alloc.height); */
+    /* cr = cairo_create(surface); */
+    /*  */
+    /* gtk_style_context_add_class(gtk_widget_get_style_context(row), "drag-icon"); */
+    /* gtk_widget_draw (row, cr); */
+    /* gtk_style_context_remove_class(gtk_widget_get_style_context(row), "drag-icon"); */
+    /*  */
+    /* gtk_widget_translate_coordinates (widget, row, 0, 0, &x, &y); */
+    /* cairo_surface_get_device_scale (surface, &sx, &sy); */
+    /* cairo_surface_set_device_offset (surface, -x * sx, -y * sy); */
+    /* gtk_drag_set_icon_surface (context, surface); */
+    /*  */
+    /* cairo_destroy (cr); */
+    /* cairo_surface_destroy (surface); */
+}
+
+
+
+static void drag_data_received(GtkWidget        *widget,
+                    GdkDragContext   *context,
+                    gint              x,
+                    gint              y,
+                    GtkSelectionData *selection_data,
+                    guint             info,
+                    guint32           time,
+                    gpointer          data)
+{
+    printf("data-received\n");
 }
 
 void tracklist_init(Tracklist* this)
@@ -106,7 +179,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_title(column, "Track");
     gtk_tree_view_column_set_expand(column, TRUE);
     g_object_set(G_OBJECT(cellrenderer), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    /* gtk_tree_view_column_set_sort_column_id(column, id); */
     gtk_tree_view_set_search_column(this->tree, TRACKLIST_COLUMN_NAME);
 
     id = TRACKLIST_COLUMN_LUFS;
@@ -122,7 +195,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "LUFs");
     gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    /* gtk_tree_view_column_set_sort_column_id(column, id); */
 
     id = TRACKLIST_COLUMN_PEAK;
     column = gtk_tree_view_column_new();
@@ -137,7 +210,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "Peak");
     gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    /* gtk_tree_view_column_set_sort_column_id(column, id); */
 
     id = TRACKLIST_COLUMN_DURATION;
     column = gtk_tree_view_column_new();
@@ -152,7 +225,13 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrenderer, "text", id);
     gtk_tree_view_column_set_title(column, "Duration");
     gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    /* gtk_tree_view_column_set_sort_column_id(column, id); */
+
+    gtk_drag_source_set(GTK_WIDGET(this->tree), GDK_BUTTON1_MASK, entries, 1, GDK_ACTION_MOVE);
+    g_signal_connect(GTK_WIDGET(this->tree), "drag-begin", G_CALLBACK (drag_begin), this);
+
+    gtk_drag_dest_set(GTK_WIDGET(this->tree), GTK_DEST_DEFAULT_ALL, entries, 1, GDK_ACTION_MOVE);
+    g_signal_connect(this->tree, "drag_data_received", G_CALLBACK(drag_data_received), NULL);
 
     gtk_widget_show_all(GTK_WIDGET(this->tree));
 }
@@ -288,6 +367,7 @@ void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection
 {
     Track* track;
     GtkTreeIter iter;
+    /* TODO don't need to set model, its set in ..._get_selection */
     GtkTreeModel* model = GTK_TREE_MODEL(this->list);
 
     gtk_tree_selection_get_selected(selection, &model, &iter);

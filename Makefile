@@ -47,11 +47,12 @@ INC_DIR     	= include
 DATA_DIR    	= share
 BIN_DIR     	= bin
 BUILD_DIR   	= build
+DIST_DIR 		= dist
 MAN_DIR     	= $(DATA_DIR)/man
 MAN_SECTION 	= man1
 DOC_DIR 		= doc
 DESKTOP_DIR     = $(DATA_DIR)/applications
-ICON_DIR 		= $(DATA_DIR)/icons
+ICON_DIR 		= $(DATA_DIR)/icons/$(TARGET)
 
 
 ################################################################################
@@ -64,9 +65,9 @@ DOXY_DIR  		= doxy
 ################################################################################
 # Debian .deb
 #
-DEB_PKG 		= $(TARGET).deb
-deb: PREFIX     = $(TARGET)/usr/local
-deb: SIZE       = $(shell du -s alphabet/ | cut -f 1)
+DEB_PKG 		= $(DIST_DIR)/$(TARGET).deb
+deb: PREFIX     = $(DIST_DIR)/$(TARGET)/usr/local
+deb: SIZE       = $(shell du -s $(DIST_DIR)/$(TARGET) | cut -f 1)
 
 define DEBIAN_CONTROL
 Package: $(TARGET)
@@ -84,9 +85,16 @@ export DEBIAN_CONTROL
 
 
 ################################################################################
+# Appimage
+#
+APPIMG_PKG 		= $(DIST_DIR)/$(TARGET).appimage
+appimg: PREFIX  = $(DIST_DIR)/$(TARGET)/usr
+
+
+################################################################################
 # MacOs .app
 #
-APP_PKG 		= $(NAME).app
+APP_PKG 		= $(DIST_DIR)/$(NAME).app
 MAC_DIR         = macosx
 APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 
@@ -102,6 +110,7 @@ $(APP_PKG)
 
 $(BIN_DIR)/
 $(BUILD_DIR)/
+$(DIST_DIR)/
 $(DOXY_DIR)/
 $(MAN_DIR)/
 
@@ -137,6 +146,7 @@ init:
 	mkdir -pv 	$(INC_DIR)
 	mkdir -pv 	$(DOC_DIR)
 	mkdir -pv 	$(DATA_DIR)
+	mkdir -pv 	$(DIST_DIR)
 	doxygen -g  $(DOXY_CFG)
 	touch 	 	$(CONFIG)
 	@printf "\e[0;32m%s\e[0m\n" "init complete"
@@ -173,8 +183,8 @@ install: all man
 				$(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	chmod 644   $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	mkdir -pv   $(PREFIX)/$(ICON_DIR)/$(TARGET)
-	cp -fv      $(ICON_DIR)/* \
-	            $(PREFIX)/$(ICON_DIR)/
+	cp -rfv     $(ICON_DIR) \
+	            $(PREFIX)/$(ICON_DIR)
 ifeq ($(OS),Linux)
 	mkdir -pv   $(PREFIX)/$(DESKTOP_DIR)
 	cp -fv      $(DESKTOP_DIR)/$(TARGET).desktop \
@@ -192,10 +202,18 @@ endif
 	@printf "\e[0;32m%s\e[0m\n" "uninstalled $(TARGET) from $(PREFIX)"
 
 deb: install
-	mkdir -p 	$(TARGET)/DEBIAN
-	@echo "$$DEBIAN_CONTROL" > $(TARGET)/DEBIAN/control
-	dpkg-deb --build $(TARGET) $(DEB_PKG)
+	rm -fvr     $(DEB_PKG)
+	mkdir -p 	$(DIST_DIR)/$(TARGET)/DEBIAN
+	@echo "$$DEBIAN_CONTROL" > $(DIST_DIR)/$(TARGET)/DEBIAN/control
+	dpkg-deb --build $(DIST_DIR)/$(TARGET) $(DEB_PKG)
+	rm -rv 		$(DIST_DIR)/$(TARGET)
 	@printf "\e[0;32m%s\e[0m\n" "built $(DEB_PKG)"
+
+appimg: install
+	mkdir -p 	$(DIST_DIR)/$(TARGET)
+	linuxdeploy --appdir $(DIST_DIR)/$(TARGET) --output appimage
+	mv -v 		*.AppImage $(DIST_DIR)/
+	@printf "\e[0;32m%s\e[0m\n" "built $(APPIMG_PKG)"
 
 $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
@@ -242,6 +260,7 @@ clean:
 	rm -fvr     ./$(TARGET)
 	rm -fv      ./$(TARGET).deb
 	rm -fvr     ./$(APP_PKG)
+	rm -fvr     ./$(DIST_DIR)
 	rm -fv      ./tags
 	@printf "\e[0;32m%s\e[0m\n" "cleaned $(TARGET)"
 
@@ -258,6 +277,7 @@ help:
 	@echo '  install     install in $(PREXIF)'
 	@echo '  uninstall   install from $(PREXIF)'
 	@echo '  deb         builb .deb package'
+	@echo '  appimg      builb .AppImage package'
 	@echo '  app         build .app macos bundle'
 	@echo '  apt         install dependencies with apt'
 	@echo '  brew        install dependencies with homebrew'

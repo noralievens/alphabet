@@ -1,36 +1,36 @@
 ################################################################################
 # Os
 #
-OS  			= $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
+OS              = $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
 
 ################################################################################
 # Libs
 #
-LIBS         	= $(shell pkg-config --libs gtk+-3.0 mpv libebur128 )
+LIBS            = $(shell pkg-config --libs gtk+-3.0 mpv libebur128 )
 LIBS           += $(shell pkg-config --libs libavformat libavutil sndfile)
-LIBS		   += -lm
+LIBS           += -lm
 ifeq ($(OS),Darwin)
-	LIBS       += $(shell pkg-config --libs gtk-mac-integration-gtk3)
+    LIBS       += $(shell pkg-config --libs gtk-mac-integration-gtk3)
 endif
 
 
 ################################################################################
 # Includes
 #
-INCLUDES     	= $(shell pkg-config --cflags gtk+-3.0 mpv libebur128)
+INCLUDES        = $(shell pkg-config --cflags gtk+-3.0 mpv libebur128)
 INCLUDES       += $(shell pkg-config --cflags libavformat libavutil sndfile)
-INCLUDES	   += -I/usr/include/mpv
+INCLUDES       += -I/usr/include/mpv
 ifeq ($(OS),Darwin)
-	INCLUDES   += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
+    INCLUDES   += $(shell pkg-config --cflags gtk-mac-integration-gtk3)
 endif
 
 
 ################################################################################
 # Cflags
 #
-CFLAGS 		   += "-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
+CFLAGS          += "-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
 ifeq ($(OS),Darwin)
-	CFLAGS     += -DMAC_INTEGRATION
+    CFLAGS     += -DMAC_INTEGRATION
 endif
 
 

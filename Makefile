@@ -5,11 +5,11 @@
 # @copyright    : Copyright (c) 2021 Arno Lievens
 #
 TARGET 			= alphabet
-NAME 		 	= Alphabet
-DESCRIPTION  	= audioplayer
-VERSION      	= 0.1
-AUTHOR       	= arnolievens@gmail.com
-DATE         	= 08/09/2021
+NAME 			= Alphabet
+DESCRIPTION 	= audioplayer
+VERSION 		= 0.1
+AUTHOR 			= arnolievens@gmail.com
+DATE 			= 08/09/2021
 CONFIG 			= config.mk
 
 include $(CONFIG)

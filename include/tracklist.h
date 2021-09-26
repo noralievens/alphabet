@@ -33,6 +33,7 @@ typedef struct {
 typedef struct LoadFileData{
     GFile* file;
     GtkTreePath* position;
+    GtkTreeViewDropPosition drop_position;
 } LoadFileData;
 
 /**
@@ -64,7 +65,7 @@ extern void tracklist_init(Tracklist* this);
  * @param track the track to be added
  * @param after insert the new track after this TreePath or NULL to append
  */
-extern void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after);
+extern void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after, GtkTreeViewDropPosition pos);
 
 /**
  * Add a file as a track to the tracklist
@@ -91,7 +92,8 @@ extern void tracklist_append_file(Tracklist* this, GFile* file);
  * @param path new file track will be inserted after path
  * @param file file to be added
  */
-extern void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path);
+extern void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path, GtkTreeViewDropPosition pos);
+
 
 /**
  * Remove the currently selected (in treeview) row

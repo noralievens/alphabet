@@ -45,17 +45,17 @@ static void tracklist_load_async(gpointer data, gpointer user_data);
  */
 
 typedef enum TRACKLIST_TABLE_ENTRY {
-    TRACKLIST_TABLE_ENTRY_STRING,
-    TRACKLIST_TABLE_ENTRY_GTK_TREE_MODEL_ROW,
-    TRACKLIST_TABLE_ENTRY_WAV,
-    TRACKLIST_TABLE_ENTRY_COUNT
+    ENTRY_ROW,
+    ENTRY_STR,
+    ENTRY_WAV,
+    ENTRY_TOT
 } TRACKLIST_TABLE_ENTRY;
 
 
-GtkTargetEntry entries[] = {
-    {"STRING", 0, TRACKLIST_TABLE_ENTRY_STRING},
-    {"GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_WIDGET, TRACKLIST_TABLE_ENTRY_GTK_TREE_MODEL_ROW},
-    {"audio/x-wav", 0, TRACKLIST_TABLE_ENTRY_WAV},
+GtkTargetEntry entries[ENTRY_TOT] = {
+    [ENTRY_ROW] = {"GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_WIDGET, ENTRY_ROW},
+    [ENTRY_STR] = {"STRING", GTK_TARGET_OTHER_APP, ENTRY_STR},
+    [ENTRY_WAV] = {"audio/x-wav", GTK_TARGET_OTHER_APP, ENTRY_WAV},
     /* {"text/uri-list", 0, 3} */
 };
 
@@ -87,55 +87,117 @@ Tracklist* tracklist_new(Player* player)
 }
 
 
+
+
+
+
+
+
+void drag_begin (GtkTreeView *tree, GdkDragContext *ctx, Tracklist* this)
+{
+}
+
+gboolean drag_motion(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y, guint time, gpointer user_data)
+{
+    GdkAtom target_atom = gtk_drag_dest_find_target(GTK_WIDGET(tree), ctx, NULL);
+
+    if (target_atom != GDK_NONE) {
+        GtkTreePath* path;
+        GtkTreeViewDropPosition pos;
+        gtk_tree_view_get_dest_row_at_pos(tree, x, y, &path, &pos);
+        gtk_tree_view_set_drag_dest_row(tree, path, pos);
+
+        GdkDragAction action = gdk_drag_context_get_suggested_action(ctx);
+        gdk_drag_status(ctx, action, time);
+        return TRUE;
+    }
+    gdk_drag_status(ctx, 0, time);
+
+    return FALSE;
+}
+
+gboolean drag_drop(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y, guint time, gpointer user_data)
+{
+    GdkAtom target_atom = gtk_drag_dest_find_target(GTK_WIDGET(tree), ctx, NULL);
+
+    if (target_atom != GDK_NONE) {
+
+        /* GtkTreePath* dest; */
+        /* GtkTreeViewDropPosition pos; */
+        /*  */
+        /* gtk_tree_view_get_dest_row_at_pos(tree, x, y, &dest, &pos); */
+
+        /* gtk_drag_get_data(tree, ctx, target_atom, time); */
+        return FALSE;
+    }
+    return FALSE;
+}
+
 void
-drag_data_get (GtkWidget        *widget,
-               GdkDragContext   *context,
-               GtkSelectionData *selection_data,
-               guint             info,
-               guint             time,
-               gpointer          data)
+drag_data_get (GtkTreeView* tree, GdkDragContext* ctx, GtkSelectionData* selection, guint info, guint time, gpointer data)
 {
-    printf("get\n");
 }
 
-static void drag_begin (GtkTreeView *tree, GdkDragContext *context, Tracklist* this)
-{
-    printf("begin\n");
-}
 
-static void drag_data_received(
-        GtkWidget *tree, GdkDragContext *ctx, gint x, gint y,
-        GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
+static void drag_data_received(GtkTreeView* tree, GdkDragContext *ctx, gint x, gint y, GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
 {
-    /* tfw why \r ?? */
     gint wx, wy;
-    const gchar* delim = "\r\n";
-    const guchar* uris = gtk_selection_data_get_data(selection);
 
-    gchar* type = gdk_atom_name(gtk_selection_data_get_target(selection));
+    switch (info) {
+        case ENTRY_STR: {
+            GtkTreePath* path;
+            GtkTreeViewDropPosition pos;
+            gtk_tree_view_get_dest_row_at_pos(tree, x, y, &path, &pos);
 
-    GtkTreePath* path = gtk_tree_path_new();
+            /* tfw why \r ?? */
+            const gchar* delim = "\r\n";
+            const guchar* uris = gtk_selection_data_get_data(selection);
+            char* str = g_strdup((const char*)uris);
+            char* uri;
+            uri = strtok(str, delim);
+            do {
+                GFile* file = g_file_new_for_uri(uri);
+                tracklist_insert_file(this, file, path, pos);
+            } while ((uri = strtok(NULL, delim)));
 
-    printf("x: %d, y: %d\n", x, y);
+            gtk_drag_finish(ctx, TRUE, TRUE, time);
+            g_free(str);
+            break;
+        }
 
-    gtk_tree_view_convert_widget_to_bin_window_coords(this->tree, x, y, &wx, &wy);
-    gtk_tree_view_get_path_at_pos(this->tree, wx, wy, &path, NULL, NULL, NULL);
+        case ENTRY_ROW: {
+            break;
+        }
 
-    if (g_strcmp0(type, "STRING") == 0) {
-        char* str = g_strdup((const char*)uris);
-        char* uri;
-        uri = strtok(str, delim);
-        do {
-            GFile* file = g_file_new_for_uri(uri);
-            tracklist_insert_file(this, file, path);
-        } while ((uri = strtok(NULL, delim)));
-
-        g_free(str);
+        default: printf("DEBUG: INVALID GDK ATOM\n"); break;
     }
 
-    gtk_drag_finish(ctx, TRUE, FALSE, time);
-    g_free(type);
+    gtk_drag_finish(ctx, FALSE, FALSE, time);
 }
+
+void drag_leave(GtkWidget* tree, GdkDragContext* ctx, guint time, gpointer user_data)
+{
+    printf("leave\n");
+}
+
+void drag_data_delete(GtkWidget* tree, GdkDragContext* ctx, gpointer user_data)
+{
+    /* printf("drag-delete\n"); */
+}
+
+gboolean drag_data_failed(GtkWidget *tree, GdkDragContext *ctx, GtkDragResult result, gpointer user_data)
+{
+    printf("drag-failed: %d\n", result);
+    return FALSE;
+}
+
+
+
+
+
+
+
+
 
 void tracklist_init(Tracklist* this)
 {
@@ -218,25 +280,28 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_expand(column, FALSE);
     /* gtk_tree_view_column_set_sort_column_id(column, id); */
 
-    gtk_drag_source_set(GTK_WIDGET(this->tree), GDK_BUTTON1_MASK, entries, 1, GDK_ACTION_MOVE);
-    g_signal_connect(GTK_WIDGET(this->tree), "drag-begin", G_CALLBACK (drag_begin), this);
-
-    gtk_drag_dest_set(GTK_WIDGET(this->tree), GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT, NULL, 1, GDK_ACTION_MOVE);
-    g_signal_connect(this->tree, "drag-data-received", G_CALLBACK(drag_data_received), this);
-
     GtkTargetList* target_list = gtk_target_list_new(NULL, 0);
-    gdk_atom_intern(entries[TRACKLIST_TABLE_ENTRY_STRING].target, TRUE);
-    gdk_atom_intern(entries[TRACKLIST_TABLE_ENTRY_GTK_TREE_MODEL_ROW].target, TRUE);
-    gtk_target_list_add_table(target_list, entries, TRACKLIST_TABLE_ENTRY_COUNT);
-    gtk_drag_dest_set_target_list(GTK_WIDGET(this->tree), target_list);
+    gdk_atom_intern(entries[ENTRY_STR].target, TRUE);
+    gdk_atom_intern(entries[ENTRY_ROW].target, TRUE);
+    gdk_atom_intern(entries[ENTRY_WAV].target, TRUE);
+    gtk_target_list_add_table(target_list, entries, ENTRY_TOT);
 
-    /* g_signal_connect(this->tree, "drag-motion", G_CALLBACK(drag_motion), NULL); */
-    /* g_signal_connect(this->tree, "drag-drop", G_CALLBACK(drag_data_received), NULL); */
+    gtk_tree_view_enable_model_drag_source(this->tree, GDK_BUTTON1_MASK, entries, ENTRY_ROW+1, GDK_ACTION_MOVE);
+    gtk_tree_view_enable_model_drag_dest(this->tree, entries, ENTRY_TOT, GDK_ACTION_MOVE);
+
+    /* g_signal_connect(this->tree, "drag-begin", G_CALLBACK(drag_begin), this); */
+    g_signal_connect(this->tree, "drag-motion", G_CALLBACK(drag_motion), this);
+    g_signal_connect(this->tree, "drag-drop", G_CALLBACK(drag_drop), this);
+    g_signal_connect(this->tree, "drag-data-get", G_CALLBACK(drag_data_get), this);
+    g_signal_connect(this->tree, "drag-data-received", G_CALLBACK(drag_data_received), this);
+    g_signal_connect(this->tree, "drag-failed", G_CALLBACK(drag_data_failed), this);
+    g_signal_connect(this->tree, "drag-data-delete", G_CALLBACK(drag_data_delete), this);
+    /* g_signal_connect(this->tree, "drag-leave", G_CALLBACK(drag_leave), this); */
 
     gtk_widget_show_all(GTK_WIDGET(this->tree));
 }
 
-void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after)
+void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* path, GtkTreeViewDropPosition pos)
 {
     if (!track) return;
     GtkTreeIter iter, prev;
@@ -250,9 +315,20 @@ void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after)
     gchar duration[10];
     dtoduration(duration, track->length);
 
-    if (after && gtk_tree_model_get_iter(GTK_TREE_MODEL(this->list), &prev, after)) {
-        gtk_list_store_insert_after(this->list, &iter, &prev);
+    if (path && gtk_tree_model_get_iter(GTK_TREE_MODEL(this->list), &prev, path)) {
+        switch (pos) {
+            case GTK_TREE_VIEW_DROP_BEFORE:
+            case GTK_TREE_VIEW_DROP_INTO_OR_BEFORE:
+                gtk_list_store_insert_before(this->list, &iter, &prev);
+                break;
+
+            case GTK_TREE_VIEW_DROP_AFTER:
+            case GTK_TREE_VIEW_DROP_INTO_OR_AFTER:
+            default:
+                gtk_list_store_insert_after(this->list, &iter, &prev);
+        }
     } else {
+        gtk_tree_path_free(path);
         gtk_list_store_append(this->list, &iter);
     }
     gtk_list_store_set(
@@ -267,7 +343,6 @@ void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after)
     this->min_lufs = MIN(this->min_lufs, track->lufs);
     this->player->min_lufs = this->min_lufs;
 
-    gtk_tree_path_free(after);
 }
 
 Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
@@ -318,11 +393,12 @@ fail:
     return NULL;
 }
 
-LoadFileData* loadfiledata_new(GFile* file, GtkTreePath* path)
+LoadFileData* loadfiledata_new(GFile* file, GtkTreePath* path, GtkTreeViewDropPosition pos)
 {
     LoadFileData* this = malloc(sizeof(LoadFileData));
     this->file = file;
     this->position = path;
+    this->drop_position = pos;
     return this;
 }
 
@@ -331,10 +407,10 @@ void loadfiledata_free(LoadFileData* this)
     free(this);
 }
 
-void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path)
+void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path, GtkTreeViewDropPosition pos)
 {
     GError* err = NULL;
-    LoadFileData* data = loadfiledata_new(file, path);
+    LoadFileData* data = loadfiledata_new(file, path, pos);
     g_thread_pool_push(this->load_thread, data, &err);
     if (err) {
         g_printerr("%s\n", err->message);
@@ -343,7 +419,7 @@ void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path)
 
 void tracklist_append_file(Tracklist* this, GFile* file)
 {
-    tracklist_insert_file(this, file, NULL);
+    tracklist_insert_file(this, file, NULL, 0);
 }
 
 void tracklist_remove_selected(Tracklist* this)
@@ -410,8 +486,9 @@ void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection
 void tracklist_load_async(gpointer data, gpointer user_data)
 {
     Tracklist* this = user_data;
-    Track* track = tracklist_file_to_track(this, ((LoadFileData*)data)->file);
+    LoadFileData* loadfile = data;
+    Track* track = tracklist_file_to_track(this, loadfile->file);
     /* this shouldn't be wrapped in g_idle_ad ?? */
-    if (track) tracklist_add_track(this, track, ((LoadFileData*)data)->position);
+    if (track) tracklist_add_track(this, track, loadfile->position, loadfile->drop_position);
     loadfiledata_free(data);
 }

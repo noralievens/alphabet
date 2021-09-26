@@ -101,7 +101,7 @@ void on_click_add(GtkWindow* window)
     if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(chsr)) == GTK_RESPONSE_ACCEPT) {
 
         GSList* filelist = gtk_file_chooser_get_files(GTK_FILE_CHOOSER(chsr));
-        do tracklist_add_file(tracklist, filelist->data);
+        do tracklist_append_file(tracklist, filelist->data);
         while ((filelist = filelist->next));
 
         g_slist_free(filelist);
@@ -251,7 +251,7 @@ void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
 void on_open(GApplication *alphabet, GFile **files, gint n, UNUSED const char* hint)
 {
     for (gint i = 0; i < n; i++) {
-        tracklist_add_file(tracklist, files[i]);
+        tracklist_append_file(tracklist, files[i]);
         /* must - cannot unref file?? */
         /* g_object_unref(files[i]); */
     }

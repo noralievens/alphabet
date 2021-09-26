@@ -30,6 +30,11 @@ typedef struct {
     GThreadPool* load_thread;
 } Tracklist;
 
+typedef struct LoadFileData{
+    GFile* file;
+    GtkTreePath* position;
+} LoadFileData;
+
 /**
  * Constructor
  *
@@ -52,11 +57,14 @@ extern void tracklist_init(Tracklist* this);
 /**
  * Add a track to the tracklist
  *
+ * insert track after TreePath or append to the list (NULL)
+ *
  * all Tracks will be free-ed by tracklist
  * @param this tracklist object
  * @param track the track to be added
+ * @param after insert the new track after this TreePath or NULL to append
  */
-extern void tracklist_add_track(Tracklist* this, Track* track);
+extern void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after);
 
 /**
  * Add a file as a track to the tracklist
@@ -64,11 +72,26 @@ extern void tracklist_add_track(Tracklist* this, Track* track);
  * add track asynchronously
  * a new Track is allocated and stored in the list
  * all Tracks will be free-ed by tracklist_free
+ * track will be appended
  *
  * @param this tracklist object
  * @param file file to be added
  */
-extern void tracklist_add_file(Tracklist* this, GFile* file);
+extern void tracklist_append_file(Tracklist* this, GFile* file);
+
+/**
+ * Add a file as a track to the tracklist
+ *
+ * add track asynchronously
+ * a new Track is allocated and stored in the list
+ * all Tracks will be free-ed by tracklist_free
+ * track will be inserted after path
+ *
+ * @param this tracklist object
+ * @param path new file track will be inserted after path
+ * @param file file to be added
+ */
+extern void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path);
 
 /**
  * Remove the currently selected (in treeview) row

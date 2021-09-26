@@ -31,6 +31,10 @@ CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
 CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
 CFLAGS         += -Wswitch-default
 CFLAGS         += -Wunreachable-code
+
+CFLAGS         += -Wno-discarded-qualifiers
+CFLAGS         += -Wno-unused-parameter
+CFLAGS         += -Wno-unused-variable
 # CFLAGS           += -Wswitch-enum
 # CFLAGS           += -Wconversion
 

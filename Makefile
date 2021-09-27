@@ -26,7 +26,7 @@ INCLUDES       +=
 CC              = gcc
 CFLAGS          = -DVERSION=\"$(VERSION)\"
 # CFLAGS           += -DDEBUG -g
-CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
+CFLAGS         += -std=gnu11 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
 CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings
 CFLAGS         += -Wswitch-default
@@ -212,7 +212,7 @@ deb: install
 	@printf "\e[0;32m%s\e[0m\n" "built $(DEB_PKG)"
 
 appimg: install
-	mkdir -p    $(DIST_DIR)/$(TARGET)
+	mkdir -pv   $(DIST_DIR)/$(TARGET)
 	linuxdeploy --appdir $(DIST_DIR)/$(TARGET) --output appimage
 	mv -v       *.AppImage $(DIST_DIR)/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APPIMG_PKG)"
@@ -236,6 +236,7 @@ $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png
 
 app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	rm -fr      $(APP_PKG)
+	mkdir -pv 	$(DIST_DIR)
 	cp -fvr     $(MAC_DIR) \
 	            $(APP_PKG)
 	cp -fv      $(BIN_DIR)/$(TARGET) \
@@ -243,7 +244,9 @@ app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	dylibbundler -od -b -x \
 	            $(APP_PKG)/Contents/MacOS/$(TARGET)-bin -d \
 	            $(APP_PKG)/Contents/Resources/lib
-	create-dmg  $(APP_PKG) .
+	rm -fv 		$(DIST_DIR)/*.dmg
+	create-dmg  $(APP_PKG) \
+		        $(DIST_DIR)
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:

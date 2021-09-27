@@ -331,7 +331,7 @@ Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
         g_printerr("Error getting mimetype for file \"%s\"\n", path);
         goto fail;
     }
-    if (!g_strstr_len(type, -1, "audio")) {
+    if (!g_strstr_len(type, -1, "audio") && !g_strstr_len(type, -1, "org.xiph.flac")) {
         g_printerr("Error loading file \"%s\": Not and audio file\n", path);
         goto fail;
     }

@@ -277,7 +277,7 @@ void on_open(GApplication *alphabet, GFile **files, gint n, UNUSED const char* h
 gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
 {
     GFile* file = g_file_new_for_path(path);
-    tracklist_add_file(tracklist, file);
+    tracklist_append_file(tracklist, file);
     return TRUE;
 }
 #endif

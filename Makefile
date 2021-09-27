@@ -212,6 +212,7 @@ $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png
 
 app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	rm -fr      $(APP_PKG)
+	rm -f 		$(APP_PKG).dmg
 	cp -fvr 	$(MAC_DIR) \
 				$(APP_PKG)
 	cp -fv		$(BIN_DIR)/$(TARGET) \

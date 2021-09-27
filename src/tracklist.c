@@ -331,7 +331,6 @@ Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
         g_printerr("Error getting mimetype for file \"%s\"\n", path);
         goto fail;
     }
-    /* invalid file*/
     if (!g_strstr_len(type, -1, "audio")) {
         g_printerr("Error loading file \"%s\": Not and audio file\n", path);
         goto fail;
@@ -353,7 +352,10 @@ Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
     track = track_new(name, path);
 
 fail:
-    g_object_unref(info);
+    /* delete file here if creating track failed
+     * because it cannot be unreffed in load_async */
+    if (track) g_object_unref(file);
+    if (info) g_object_unref(info);
     g_free(path);
     return track;
 }

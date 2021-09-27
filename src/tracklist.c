@@ -354,7 +354,7 @@ Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
 fail:
     /* delete file here if creating track failed
      * because it cannot be unreffed in load_async */
-    if (track) g_object_unref(file);
+    if (!track) g_object_unref(file);
     if (info) g_object_unref(info);
     g_free(path);
     return track;
@@ -452,13 +452,11 @@ void tracklist_load_async(gpointer data, gpointer user_data)
     GtkTreePath* path = g_object_get_data(G_OBJECT(file), "path");
     GtkTreeViewDropPosition* pos = g_object_get_data(G_OBJECT(file), "position");
     Track* track = tracklist_file_to_track(this, file);
-    /* this shouldn't be wrapped in g_idle_ad ?? */
     if (track) tracklist_add_track(this, track, path, *pos);
 
     gtk_tree_path_free(path);
     free(pos);
     g_object_unref(file);
-    /* g_free(file); - invalid pointer ??*/
 }
 
 void drag_begin(GtkTreeView *tree, GdkDragContext *ctx, Tracklist* this)
@@ -497,7 +495,21 @@ guint time, gpointer user_data)
 void drag_data_get (GtkTreeView* tree, GdkDragContext* ctx,
 GtkSelectionData* selection, guint info, guint time, gpointer data)
 {
-    /* printf("drag-data-get\n"); */
+    printf("drag-data-get\n");
+
+    switch (info) {
+        case TRACKLIST_ENTRY_ROW: {
+
+
+            /* GtkTreePath* path; */
+            /* GtkTreeModel* model; */
+            /* gtk_tree_set_row_drag_data(selection, model, path); */
+
+            break;
+            }
+        default: break;
+    }
+
 }
 
 
@@ -506,6 +518,7 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
 {
     gint wx, wy;
 
+    printf("drag-data-received\n");
     switch (info) {
         case TRACKLIST_ENTRY_STR: {
             GtkTreePath* path;
@@ -531,6 +544,28 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
         }
 
         case TRACKLIST_ENTRY_ROW: {
+
+            GtkTreePath* src_path, *dst_path;
+            GtkTreeIter src_iter, dst_iter;
+            GtkTreeViewDropPosition pos;
+            GtkTreeModel* model;
+
+            gtk_tree_get_row_drag_data(selection, &model, &src_path);
+            gtk_tree_model_get_iter(model, &src_iter, src_path);
+
+            gtk_tree_view_get_dest_row_at_pos(tree, x, y, &dst_path, &pos);
+            gtk_tree_model_get_iter(model, &dst_iter, dst_path);
+
+            if (pos == GTK_TREE_VIEW_DROP_BEFORE) {
+                gtk_list_store_move_before(this->list, &src_iter, &dst_iter);
+            } else {
+                gtk_list_store_move_after(this->list, &src_iter, &dst_iter);
+            }
+
+            gtk_tree_path_free(src_path);
+            gtk_tree_path_free(dst_path);
+
+            gtk_drag_finish(ctx, TRUE, FALSE, time);
             break;
         }
 
@@ -548,7 +583,7 @@ gpointer user_data)
 
 void drag_data_delete(GtkWidget* tree, GdkDragContext* ctx, gpointer user_data)
 {
-    /* printf("drag-delete\n"); */
+    printf("drag-delete\n");
 }
 
 gboolean drag_data_failed(GtkWidget *tree, GdkDragContext *ctx,

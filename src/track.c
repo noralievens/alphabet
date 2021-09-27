@@ -70,7 +70,7 @@ Track* track_new(const char* name, const char* path)
     this->duration = calloc(9, sizeof(char));
     dtoduration(this->duration, this->length);
 
-    track_print(this);
+    /* track_print(this); */
     return this;
 }
 
@@ -142,9 +142,11 @@ void set_libav_tags(Track* this)
     } */
 
     if ((tag = av_dict_get(ctx->metadata, "title", NULL, flags))) {
+        free(this->name);
         this->name = stralloc(tag->value);
     }
     if ((tag = av_dict_get(ctx->metadata, "name", NULL, flags))) {
+        free(this->name);
         this->name = stralloc(tag->value);
     }
     if ((tag = av_dict_get(ctx->metadata, "artist", NULL, flags))) {

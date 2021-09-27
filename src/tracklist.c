@@ -39,6 +39,9 @@ static void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* se
  */
 static void tracklist_load_async(gpointer data, gpointer user_data);
 
+/*
+ * Drag-and-Drop signal handlers
+ */
 static void drag_begin(GtkTreeView *tree, GdkDragContext *ctx, Tracklist* this);
 
 static gboolean drag_motion(GtkTreeView* tree, GdkDragContext* ctx, gint x,
@@ -61,8 +64,14 @@ static void drag_data_delete(GtkWidget* tree, GdkDragContext* ctx, gpointer);
 static gboolean drag_data_failed(GtkWidget *tree, GdkDragContext *ctx,
 GtkDragResult result, gpointer user_data);
 
-/* ignore const qual warning
- * GtkTargetEntry does not change strings  */
+/**
+ * Target entries
+ *
+ * these are used to set the gdk atoms
+ *
+ * ignore const qual warning
+ * GtkTargetEntry does not change strings
+ */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
     static GtkTargetEntry entries[TRACKLIST_ENTRY_TOT] = {
@@ -115,9 +124,9 @@ Tracklist* tracklist_new(Player* player)
     this->load_thread = g_thread_pool_new(
             tracklist_load_async, this, -1, FALSE, &err);
 
-    if (err || foo) {
+    if (err) {
         g_printerr("%s\n", err->message);
-        /* tracklist_free(this); */
+        tracklist_free(this);
         return NULL;
     }
     return this;
@@ -133,8 +142,9 @@ void tracklist_init(Tracklist* this)
     this->tree = GTK_TREE_VIEW(
             gtk_tree_view_new_with_model(GTK_TREE_MODEL(this->list)));
 
-    gtk_tree_view_set_reorderable(this->tree, TRUE);
-    gtk_tree_view_set_enable_search(this->tree, FALSE);
+    /* gtk_tree_view_set_reorderable(this->tree, TRUE); */
+    gtk_tree_view_set_enable_search(this->tree, TRUE);
+
 
     selection = gtk_tree_view_get_selection(this->tree);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
@@ -156,7 +166,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_title(column, "Track");
     gtk_tree_view_column_set_expand(column, TRUE);
     g_object_set(G_OBJECT(cellrender), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-    /* gtk_tree_view_column_set_sort_column_id(column, id); */
+    gtk_tree_view_column_set_sort_column_id(column, id);
     gtk_tree_view_set_search_column(this->tree, TRACKLIST_COLUMN_NAME);
 
     id = TRACKLIST_COLUMN_LUFS;
@@ -172,7 +182,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
     gtk_tree_view_column_set_title(column, "LUFs");
     gtk_tree_view_column_set_expand(column, FALSE);
-    /* gtk_tree_view_column_set_sort_column_id(column, id); */
+    gtk_tree_view_column_set_sort_column_id(column, id);
 
     id = TRACKLIST_COLUMN_PEAK;
     column = gtk_tree_view_column_new();
@@ -187,7 +197,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
     gtk_tree_view_column_set_title(column, "Peak");
     gtk_tree_view_column_set_expand(column, FALSE);
-    /* gtk_tree_view_column_set_sort_column_id(column, id); */
+    gtk_tree_view_column_set_sort_column_id(column, id);
 
     id = TRACKLIST_COLUMN_DURATION;
     column = gtk_tree_view_column_new();
@@ -202,7 +212,16 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
     gtk_tree_view_column_set_title(column, "Duration");
     gtk_tree_view_column_set_expand(column, FALSE);
-    /* gtk_tree_view_column_set_sort_column_id(column, id); */
+    gtk_tree_view_column_set_sort_column_id(column, id);
+
+    /* Drag-and-Drop setup
+     *
+     * the tree is dnd source and destination
+     * dnd can be initiated from within the tree to reorder tracks
+     * as well as from a file manager to import new files
+     *
+     * handling is based on the gdk atoms
+     */
 
     GtkTargetList* target_list = gtk_target_list_new(NULL, 0);
     gdk_atom_intern(entries[TRACKLIST_ENTRY_STR].target, TRUE);

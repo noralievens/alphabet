@@ -247,9 +247,10 @@ void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
      * widgets are created in on_active by calling tracklist_init
      */
 
-    tracklist = tracklist_new(player);
-
-    /* if (!(tracklist = tracklist_new(player))) printf("foo\n"); */
+    if (!(tracklist = tracklist_new(player))) {
+        on_destroy(NULL, NULL);
+        g_application_quit(alphabet);
+    }
 }
 
 void on_open(GApplication *alphabet, GFile **files, gint n, UNUSED const char* hint)

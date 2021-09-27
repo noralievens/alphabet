@@ -26,7 +26,7 @@ INCLUDES       +=
 CC              = gcc
 CFLAGS          = -DVERSION=\"$(VERSION)\"
 # CFLAGS           += -DDEBUG -g
-CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
+CFLAGS         += -std=gnu11 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
 CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings
 CFLAGS         += -Wswitch-default

@@ -1,4 +1,5 @@
 /**
+    printf("time: %s\n", dest);
  * @author      Arno Lievens (arnolievens@gmail.com)
  * @date        08/09/2021
  * @file        track.c
@@ -170,7 +171,7 @@ void set_libav_tags(Track* this)
 
 void set_file_info(Track* this, SF_INFO* file_info)
 {
-    const int len = 7;
+    const size_t len = 7;
     this->sample_rate = calloc(len+1, sizeof(char));
     snprintf(this->sample_rate, len, "%d", file_info->samplerate);
 
@@ -185,8 +186,8 @@ void set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
     double* buffer;
     double lufs, peak;
     int flags = EBUR128_MODE_I | EBUR128_MODE_TRUE_PEAK;
-    unsigned int sr = file_info->samplerate;
-    unsigned int chs = file_info->channels;
+    unsigned int sr = (unsigned int)file_info->samplerate;
+    unsigned int chs = (unsigned int)file_info->channels;
 
     if (!(sts = malloc(sizeof(ebur128_state*)))) {
         fprintf(stderr, "ebur128 malloc failed\n");

@@ -28,15 +28,15 @@ CFLAGS          = -DVERSION=\"$(VERSION)\"
 # CFLAGS           += -DDEBUG -g
 CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
-CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
+CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings
 CFLAGS         += -Wswitch-default
 CFLAGS         += -Wunreachable-code
+CFLAGS         += -Wdiscarded-qualifiers -Wcast-qual
 
-CFLAGS         += -Wno-discarded-qualifiers
 CFLAGS         += -Wno-unused-parameter
 CFLAGS         += -Wno-unused-variable
 # CFLAGS           += -Wswitch-enum
-# CFLAGS           += -Wconversion
+CFLAGS           += -Wconversion
 
 CTAGS           = ctags
 CTAGSFLAGS      =

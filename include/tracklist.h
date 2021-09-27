@@ -13,14 +13,21 @@
 
 #include "player.h"
 
-enum {
+typedef enum TracklistColumn{
     TRACKLIST_COLUMN_NAME,
     TRACKLIST_COLUMN_LUFS,
     TRACKLIST_COLUMN_PEAK,
     TRACKLIST_COLUMN_DURATION,
     TRACKLIST_COLUMN_DATA,
     TRACKLIST_COLUMNS
-};
+} TracklistColum;
+
+typedef enum TracklistEntry {
+    TRACKLIST_ENTRY_ROW,
+    TRACKLIST_ENTRY_STR,
+    TRACKLIST_ENTRY_WAV,
+    TRACKLIST_ENTRY_TOT
+} TracklistEntry ;
 
 typedef struct {
     GtkListStore* list;         /**< data structure of the tree */
@@ -30,12 +37,6 @@ typedef struct {
     GThreadPool* load_thread;
 } Tracklist;
 
-typedef struct LoadFileData{
-    GFile* file;
-    GtkTreePath* position;
-    GtkTreeViewDropPosition drop_position;
-} LoadFileData;
-
 /**
  * Constructor
  *
@@ -44,7 +45,7 @@ typedef struct LoadFileData{
  * call init to create the actual tree
  *
  * @param player reference to the player object used to playstart selected row
- * @return Tracklist newly created object
+ * @return Tracklist newly created object or NULL when failed to load threadpool
  */
 extern Tracklist* tracklist_new(Player* player);
 
@@ -68,12 +69,13 @@ extern void tracklist_init(Tracklist* this);
 extern void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* after, GtkTreeViewDropPosition pos);
 
 /**
- * Add a file as a track to the tracklist
+ * Append a file as a track to the tracklist
  *
  * add track asynchronously
  * a new Track is allocated and stored in the list
- * all Tracks will be free-ed by tracklist_free
- * track will be appended
+ * all Tracks can be free-ed by tracklist_free
+ * track will be appended to the list
+ * file will be free-ed when async loader has finished
  *
  * @param this tracklist object
  * @param file file to be added
@@ -81,19 +83,21 @@ extern void tracklist_add_track(Tracklist* this, Track* track, GtkTreePath* afte
 extern void tracklist_append_file(Tracklist* this, GFile* file);
 
 /**
- * Add a file as a track to the tracklist
+ * Insert a file as a track to the tracklist
  *
  * add track asynchronously
  * a new Track is allocated and stored in the list
- * all Tracks will be free-ed by tracklist_free
- * track will be inserted after path
+ * all Tracks can be free-ed by tracklist_free
+ * track will be inserted in the list before or after (pos) given row (path)
+ * file will be free-ed when async loader has finished
  *
  * @param this tracklist object
+ * @param file file to be added
  * @param path new file track will be inserted after path
+ * @param pos insert before (GTK_TREE_VIEW_DROP_POSITION_BEFORE) or (..._AFTER)
  * @param file file to be added
  */
 extern void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path, GtkTreeViewDropPosition pos);
-
 
 /**
  * Remove the currently selected (in treeview) row

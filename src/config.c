@@ -23,7 +23,7 @@ void dtoduration(char* dest, double num)
 
     min = (unsigned int)num / 60;
     sec = (unsigned int)num % 60;
-    msec = (num - (unsigned int)num) * 1000;
+    msec = (unsigned int)((num - (unsigned int)num) * 1000);
 
     sprintf(dest, "%02d:%02d.%03d", min, sec, msec);
 }

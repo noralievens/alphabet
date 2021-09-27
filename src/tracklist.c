@@ -489,7 +489,11 @@ gboolean drag_drop(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y,
 guint time, gpointer user_data)
 {
     GdkAtom target = gtk_drag_dest_find_target(GTK_WIDGET(tree), ctx, NULL);
-    return (target == GDK_NONE);
+    if (target != GDK_NONE) {
+        gtk_drag_get_data(GTK_WIDGET(tree), ctx, target, time);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 void drag_data_get (GtkTreeView* tree, GdkDragContext* ctx,
@@ -500,16 +504,21 @@ GtkSelectionData* selection, guint info, guint time, gpointer data)
     switch (info) {
         case TRACKLIST_ENTRY_ROW: {
 
+            GtkTreeModel* model;
+            GtkTreeIter iter;
+            GtkTreePath* path;
 
-            /* GtkTreePath* path; */
-            /* GtkTreeModel* model; */
-            /* gtk_tree_set_row_drag_data(selection, model, path); */
+            GtkTreeSelection* tree_selection = GTK_TREE_SELECTION(gtk_tree_view_get_selection(tree));
 
+            gtk_tree_selection_get_selected(tree_selection, &model, &iter);
+            path = gtk_tree_model_get_path(model, &iter);
+            gtk_tree_set_row_drag_data(selection, model, path);
+
+            gtk_tree_path_free(path);
             break;
             }
         default: break;
     }
-
 }
 
 
@@ -538,28 +547,36 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
                 tracklist_insert_file(this, file, path, pos);
             } while ((uri = strtok(NULL, delim)));
 
-            gtk_drag_finish(ctx, TRUE, TRUE, time);
             g_free(str);
+            gtk_drag_finish(ctx, TRUE, FALSE, time);
             break;
         }
 
         case TRACKLIST_ENTRY_ROW: {
 
+            GtkTreeModel* model;
             GtkTreePath* src_path, *dst_path;
             GtkTreeIter src_iter, dst_iter;
-            GtkTreeViewDropPosition pos;
-            GtkTreeModel* model;
+            GtkTreeIter* destination = NULL;
+            GtkTreeViewDropPosition pos = GTK_TREE_VIEW_DROP_AFTER;
 
             gtk_tree_get_row_drag_data(selection, &model, &src_path);
             gtk_tree_model_get_iter(model, &src_iter, src_path);
 
-            gtk_tree_view_get_dest_row_at_pos(tree, x, y, &dst_path, &pos);
-            gtk_tree_model_get_iter(model, &dst_iter, dst_path);
+            if (gtk_tree_view_get_dest_row_at_pos(tree, x, y, &dst_path, &pos)) {
+                gtk_tree_model_get_iter(model, &dst_iter, dst_path);
+                destination = &dst_iter;
+            }
 
-            if (pos == GTK_TREE_VIEW_DROP_BEFORE) {
-                gtk_list_store_move_before(this->list, &src_iter, &dst_iter);
+            /* when no drop position found, (cursor dropped under tree rows)
+             * the row should be dropped at the end of the list by calling
+             * ..._move_before(..., ..., NULL) which is a bit counterinuitive
+             */
+
+            if (pos == GTK_TREE_VIEW_DROP_BEFORE || !destination) {
+                gtk_list_store_move_before(this->list, &src_iter, destination);
             } else {
-                gtk_list_store_move_after(this->list, &src_iter, &dst_iter);
+                gtk_list_store_move_after(this->list, &src_iter, destination);
             }
 
             gtk_tree_path_free(src_path);

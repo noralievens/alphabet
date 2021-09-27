@@ -1,10 +1,10 @@
-alphabet/
-alphabet.deb
-Alphabet.app
+dist/alphabet.deb
+dist/Alphabet.app
 *.dmg
 
 bin/
 build/
+dist/
 doxy/
 share/man/
 

@@ -4,14 +4,15 @@
 # @file         : Makefile
 # @copyright    : Copyright (c) 2021 Arno Lievens
 #
-TARGET 			= alphabet
-NAME 		 	= Alphabet
-DESCRIPTION  	= audioplayer
-VERSION      	= 0.1
-AUTHOR       	= arnolievens@gmail.com
-DATE         	= 08/09/2021
+TARGET          = alphabet
+NAME            = Alphabet
+DESCRIPTION     = audioplayer
+VERSION         = 0.1
+AUTHOR          = arnolievens@gmail.com
+DATE            = 08/09/2021
+CONFIG          = config.mk
 
-include config.mk
+include $(CONFIG)
 
 ################################################################################
 # Build
@@ -22,18 +23,18 @@ OBJECTS         = $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 LIBS           +=
 INCLUDES       +=
 
-CC           	= gcc
-CFLAGS		    = -DVERSION=\"$(VERSION)\"
-# CFLAGS		   += -DDEBUG -g
+CC              = gcc
+CFLAGS          = -DVERSION=\"$(VERSION)\"
+# CFLAGS           += -DDEBUG -g
 CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
-CFLAGS		   += -Wpointer-arith -Wcast-align -Wstrict-prototypes
-CFLAGS		   += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
-CFLAGS		   += -Wswitch-default
-CFLAGS		   += -Wunreachable-code
-# CFLAGS		   += -Wswitch-enum
-# CFLAGS		   += -Wconversion
+CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
+CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
+CFLAGS         += -Wswitch-default
+CFLAGS         += -Wunreachable-code
+# CFLAGS           += -Wswitch-enum
+# CFLAGS           += -Wconversion
 
-CTAGS  	        = ctags
+CTAGS           = ctags
 CTAGSFLAGS      =
 
 
@@ -41,30 +42,32 @@ CTAGSFLAGS      =
 # Dirs
 #
 PREFIX          = /usr/local
-SRC_DIR     	= src
-INC_DIR     	= include
-DATA_DIR    	= share
-BIN_DIR     	= bin
-BUILD_DIR   	= build
-MAN_DIR     	= $(DATA_DIR)/man
-MAN_SECTION 	= man1
-DOC_DIR 		= doc
+SRC_DIR         = src
+INC_DIR         = include
+DATA_DIR        = share
+BIN_DIR         = bin
+BUILD_DIR       = build
+DIST_DIR        = dist
+MAN_DIR         = $(DATA_DIR)/man
+MAN_SECTION     = man1
+DOC_DIR         = doc
 DESKTOP_DIR     = $(DATA_DIR)/applications
-ICON_DIR 		= $(DATA_DIR)/icons
+ICON_DIR        = $(DATA_DIR)/icons/$(TARGET)
 
 
 ################################################################################
 # Doxy
 #
-DOXY_CFG 		= $(DOC_DIR)/doxygen.cfg
-DOXY_DIR  		= doxy
+DOXY_CFG        = $(DOC_DIR)/doxygen.cfg
+DOXY_DIR        = doxy
 
 
 ################################################################################
 # Debian .deb
 #
-DEB_PKG 		= $(TARGET).deb
-deb: PREFIX     = $(TARGET)/usr/local
+DEB_PKG         = $(DIST_DIR)/$(TARGET).deb
+deb: PREFIX     = $(DIST_DIR)/$(TARGET)/usr/local
+deb: SIZE       = $(shell du -s $(DIST_DIR)/$(TARGET) | cut -f 1)
 
 define DEBIAN_CONTROL
 Package: $(TARGET)
@@ -73,7 +76,7 @@ section: custom
 priority: optional
 architecture: all
 essential: no
-installed-size: 1024
+installed-size: $(SIZE)
 Depends: $(DEB_DEPS)
 maintainer: $(AUTHOR)
 description: $(DESCRIPTION)
@@ -82,9 +85,16 @@ export DEBIAN_CONTROL
 
 
 ################################################################################
+# Appimage
+#
+APPIMG_PKG      = $(DIST_DIR)/$(TARGET).appimage
+appimg: PREFIX  = $(DIST_DIR)/$(TARGET)/usr
+
+
+################################################################################
 # MacOs .app
 #
-APP_PKG 		= $(NAME).app
+APP_PKG         = $(DIST_DIR)/$(NAME).app
 MAC_DIR         = macosx
 APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 
@@ -93,13 +103,13 @@ APP_ICON        = $(MAC_DIR)/$(NAME).iconset
 # Gitignore
 
 define GIT_IGNORE
-$(TARGET)/
 $(DEB_PKG)
 $(APP_PKG)
 *.dmg
 
 $(BIN_DIR)/
 $(BUILD_DIR)/
+$(DIST_DIR)/
 $(DOXY_DIR)/
 $(MAN_DIR)/
 
@@ -114,20 +124,12 @@ export GIT_IGNORE
 ################################################################################
 # Targets
 #
-.PHONY: 	all init ctags gitignore man doxy install uninstall \
-			deb app apt brew clean
+.PHONY: all init ctags gitignore man doxy install uninstall deb app apt brew clean
 
 all: $(BIN_DIR)/$(TARGET)
 
-init:
-	mkdir -pv 	$(SRC_DIR)
-	mkdir -pv 	$(INC_DIR)
-	mkdir -pv 	$(DOC_DIR)
-	mkdir -pv 	$(DATA_DIR)
-	doxygen -g  $(DOXY_CFG)
-
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(dir $@)
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@ -I$(INCLUDES)
 
 $(BIN_DIR)/$(TARGET): $(OBJECTS)
@@ -137,6 +139,16 @@ $(BIN_DIR)/$(TARGET): $(OBJECTS)
 ctags: $(HEADERS) $(SOURCES)
 	$(CTAGS) $(CTAGSFLAGS) $(HEADERS) $(SOURCES)
 
+init:
+	mkdir -pv    $(SRC_DIR)
+	mkdir -pv    $(INC_DIR)
+	mkdir -pv    $(DOC_DIR)
+	mkdir -pv    $(DATA_DIR)
+	mkdir -pv    $(DIST_DIR)
+	doxygen -g  $(DOXY_CFG)
+	touch        $(CONFIG)
+	@printf "\e[0;32m%s\e[0m\n" "init complete"
+
 gitignore:
 	@echo "$$GIT_IGNORE" > .gitignore
 	@printf "\e[0;32m%s\e[0m\n" "copied defaults to .gitignore"
@@ -144,13 +156,13 @@ gitignore:
 man:
 	mkdir -p ./$(MAN_DIR)/$(MAN_SECTION)
 	printf "%s\n%s\n%s\n\n" \
-		"% $(shell echo $(TARGET) | tr a-z A-Z)(1) $(TARGET) $(VERSION)" \
-		"% $(AUTHOR)" \
-		"% $(DATE)" > ./$(DOC_DIR)/$(TARGET).tmp
+	    "% $(shell echo $(TARGET) | tr a-z A-Z)(1) $(TARGET) $(VERSION)" \
+	    "% $(AUTHOR)" \
+	    "% $(DATE)" > ./$(DOC_DIR)/$(TARGET).tmp
 	pandoc      $(DOC_DIR)/$(TARGET).tmp \
-		        $(DOC_DIR)/$(TARGET).md \
-				-s -t man -o \
-		        $(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
+	            $(DOC_DIR)/$(TARGET).md \
+	            -s -t man -o \
+	            $(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	rm -fv      $(DOC_DIR)/$(TARGET).tmp
 	@printf "\e[0;32m%s\e[0m\n" "generated manpage in ./$(MAN_DIR)"
 
@@ -166,15 +178,15 @@ install: all man
 	chmod 755   $(PREFIX)/$(BIN_DIR)/$(TARGET)
 	mkdir -pv   $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)
 	cp -fv      $(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1 \
-				$(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
+	            $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	chmod 644   $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	mkdir -pv   $(PREFIX)/$(ICON_DIR)/$(TARGET)
-	cp -fv      $(ICON_DIR)/* \
-	            $(PREFIX)/$(ICON_DIR)/
+	cp -rfv     $(ICON_DIR) \
+				$(PREFIX)/$(ICON_DIR)
 ifeq ($(OS),Linux)
 	mkdir -pv   $(PREFIX)/$(DESKTOP_DIR)
 	cp -fv      $(DESKTOP_DIR)/$(TARGET).desktop \
-				$(PREFIX)/$(DESKTOP_DIR)
+	            $(PREFIX)/$(DESKTOP_DIR)
 endif
 	@printf "\e[0;32m%s\e[0m\n" "installed $(TARGET) into $(PREFIX)"
 
@@ -188,15 +200,23 @@ endif
 	@printf "\e[0;32m%s\e[0m\n" "uninstalled $(TARGET) from $(PREFIX)"
 
 deb: install
-	mkdir -p 	$(TARGET)/DEBIAN
-	@echo "$$DEBIAN_CONTROL" > $(TARGET)/DEBIAN/control
-	dpkg-deb --build $(TARGET) $(DEB_PKG)
+	rm -fvr     $(DEB_PKG)
+	mkdir -p    $(DIST_DIR)/$(TARGET)/DEBIAN
+	@echo "$$DEBIAN_CONTROL" > $(DIST_DIR)/$(TARGET)/DEBIAN/control
+	dpkg-deb --build $(DIST_DIR)/$(TARGET) $(DEB_PKG)
+	rm -rv      $(DIST_DIR)/$(TARGET)
 	@printf "\e[0;32m%s\e[0m\n" "built $(DEB_PKG)"
+
+appimg: install
+	mkdir -p    $(DIST_DIR)/$(TARGET)
+	linuxdeploy --appdir $(DIST_DIR)/$(TARGET) --output appimage
+	mv -v       *.AppImage $(DIST_DIR)/
+	@printf "\e[0;32m%s\e[0m\n" "built $(APPIMG_PKG)"
 
 $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
 	mkdir -pv   $(MAC_DIR)/$(NAME).iconset
-	mkdir -pv 	$(MAC_DIR)/Contents/Resources/
+	mkdir -pv   $(MAC_DIR)/Contents/Resources/
 	sips -z 16 16     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_16x16.png
 	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_16x16@2x.png
 	sips -z 32 32     $(ICON_DIR)/$(TARGET).png --out $(APP_ICON)/icon_32x32.png
@@ -218,9 +238,9 @@ app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	cp -fv		$(BIN_DIR)/$(TARGET) \
 				$(APP_PKG)/Contents/MacOs/$(TARGET)-bin
 	dylibbundler -od -b -x \
-				$(APP_PKG)/Contents/MacOS/$(TARGET)-bin -d \
-				$(APP_PKG)/Contents/Resources/lib
-	create-dmg 	$(APP_PKG) .
+	            $(APP_PKG)/Contents/MacOS/$(TARGET)-bin -d \
+	            $(APP_PKG)/Contents/Resources/lib
+	create-dmg  $(APP_PKG) .
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:
@@ -234,11 +254,12 @@ apt:
 clean:
 	rm -fvr     ./$(BUILD_DIR)
 	rm -fvr     ./$(BIN_DIR)
-	rm -fvr 	./$(DOXY_DIR)
+	rm -fvr     ./$(DOXY_DIR)
 	rm -fvr     ./$(MAN_DIR)
 	rm -fvr     ./$(TARGET)
 	rm -fv      ./$(TARGET).deb
 	rm -fvr     ./$(APP_PKG)
+	rm -fvr     ./$(DIST_DIR)
 	rm -fv      ./tags
 	@printf "\e[0;32m%s\e[0m\n" "cleaned $(TARGET)"
 
@@ -255,6 +276,7 @@ help:
 	@echo '  install     install in $(PREXIF)'
 	@echo '  uninstall   install from $(PREXIF)'
 	@echo '  deb         builb .deb package'
+	@echo '  appimg      builb .AppImage package'
 	@echo '  app         build .app macos bundle'
 	@echo '  apt         install dependencies with apt'
 	@echo '  brew        install dependencies with homebrew'

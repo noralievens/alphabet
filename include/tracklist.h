@@ -13,6 +13,9 @@
 
 #include "player.h"
 
+/**
+ * Columns of the treeview widget
+ */
 typedef enum TracklistColumn{
     TRACKLIST_COLUMN_NAME,
     TRACKLIST_COLUMN_LUFS,
@@ -22,6 +25,11 @@ typedef enum TracklistColumn{
     TRACKLIST_COLUMNS
 } TracklistColum;
 
+/**
+ * List of target entries for DND
+ *
+ * used to create table and for info parameter in sig-handlers
+ */
 typedef enum TracklistEntry {
     TRACKLIST_ENTRY_ROW,
     TRACKLIST_ENTRY_STR,
@@ -29,12 +37,17 @@ typedef enum TracklistEntry {
     TRACKLIST_ENTRY_TOT
 } TracklistEntry ;
 
+/**
+ * Tracklist object
+ *
+ * storage of tracks as well as treeview widget
+ */
 typedef struct {
     GtkListStore* list;         /**< data structure of the tree */
-    GtkTreeView* tree;            /**< gui widget (file-manager-like) */
+    GtkTreeView* tree;          /**< gui widget (file-manager-like) */
     Player* player;             /**< reference to the player object */
-    gdouble min_lufs;
-    GThreadPool* load_thread;
+    gdouble min_lufs;           /**< min val of all track.lugfs */
+    GThreadPool* load_thread;   /**< thread pool for loading tracks */
 } Tracklist;
 
 /**
@@ -93,9 +106,8 @@ extern void tracklist_append_file(Tracklist* this, GFile* file);
  *
  * @param this tracklist object
  * @param file file to be added
- * @param path new file track will be inserted after path
+ * @param path new track will be inserted before or after path
  * @param pos insert before (GTK_TREE_VIEW_DROP_POSITION_BEFORE) or (..._AFTER)
- * @param file file to be added
  */
 extern void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path, GtkTreeViewDropPosition pos);
 

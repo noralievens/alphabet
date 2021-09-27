@@ -137,23 +137,18 @@ void tracklist_init(Tracklist* this)
     GtkTreeSelection* selection;
     GtkTreeViewColumn* column;
     GtkCellRenderer* cellrender;
-    int id;
+    TracklistColum id;
+    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
 
-    this->tree = GTK_TREE_VIEW(
-            gtk_tree_view_new_with_model(GTK_TREE_MODEL(this->list)));
+    this->tree = GTK_TREE_VIEW(gtk_tree_view_new_with_model(model));
 
-    /* gtk_tree_view_set_reorderable(this->tree, TRUE); */
     gtk_tree_view_set_enable_search(this->tree, TRUE);
-
 
     selection = gtk_tree_view_get_selection(this->tree);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
 
-    g_signal_connect_swapped(
-            selection,
-            "changed",
-            G_CALLBACK(tracklist_on_selection_changed),
-            this);
+    g_signal_connect_swapped( selection, "changed",
+            G_CALLBACK(tracklist_on_selection_changed), this);
 
     id = TRACKLIST_COLUMN_NAME;
     column = gtk_tree_view_column_new();
@@ -162,11 +157,11 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_pack_start(column, cellrender, FALSE);
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
+    gtk_tree_view_column_add_attribute(column, cellrender, "text", (gint)id);
     gtk_tree_view_column_set_title(column, "Track");
     gtk_tree_view_column_set_expand(column, TRUE);
     g_object_set(G_OBJECT(cellrender), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    gtk_tree_view_column_set_sort_column_id(column, (gint)id);
     gtk_tree_view_set_search_column(this->tree, TRACKLIST_COLUMN_NAME);
 
     id = TRACKLIST_COLUMN_LUFS;
@@ -179,10 +174,10 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
+    gtk_tree_view_column_add_attribute(column, cellrender, "text", (gint)id);
     gtk_tree_view_column_set_title(column, "LUFs");
     gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    gtk_tree_view_column_set_sort_column_id(column, (gint)id);
 
     id = TRACKLIST_COLUMN_PEAK;
     column = gtk_tree_view_column_new();
@@ -194,10 +189,10 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
+    gtk_tree_view_column_add_attribute(column, cellrender, "text", (gint)id);
     gtk_tree_view_column_set_title(column, "Peak");
     gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    gtk_tree_view_column_set_sort_column_id(column, (gint)id);
 
     id = TRACKLIST_COLUMN_DURATION;
     column = gtk_tree_view_column_new();
@@ -209,10 +204,10 @@ void tracklist_init(Tracklist* this)
     gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_add_attribute(column, cellrender, "text", id);
+    gtk_tree_view_column_add_attribute(column, cellrender, "text", (gint)id);
     gtk_tree_view_column_set_title(column, "Duration");
     gtk_tree_view_column_set_expand(column, FALSE);
-    gtk_tree_view_column_set_sort_column_id(column, id);
+    gtk_tree_view_column_set_sort_column_id(column, (gint)id);
 
     /* Drag-and-Drop setup
      *
@@ -220,7 +215,7 @@ void tracklist_init(Tracklist* this)
      * dnd can be initiated from within the tree to reorder tracks
      * as well as from a file manager to import new files
      *
-     * handling is based on the gdk atoms
+     * different handling methods are based on the gdk atoms
      */
 
     GtkTargetList* target_list = gtk_target_list_new(NULL, 0);
@@ -419,6 +414,7 @@ void tracklist_free(Tracklist* this)
 
     this->player->current = NULL;
 
+    g_thread_pool_free(this->load_thread, FALSE, FALSE);
     gtk_widget_destroy(GTK_WIDGET(this->tree));
     g_object_unref(this->list);
     g_free(this);

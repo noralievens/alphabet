@@ -20,7 +20,6 @@ typedef struct Track {
     char* name;             /**< file basename or TITLE/NAME tag */
     char* path;             /**< file absolute path */
     double length;          /**< estimated length (samplerate * samples */
-    char* duration;         /**< lengh as formatted string */
     int offset;             /**< TODO: auto*align */
     double lufs;            /**< averge loudness level as calculated by r128 */
     double peak;            /**< true peak level */

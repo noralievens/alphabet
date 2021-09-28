@@ -115,9 +115,6 @@ Track* track_new(const char* name, const char* path)
         return NULL;
     }
 
-    this->duration = calloc(9, sizeof(char));
-    dtoduration(this->duration, this->length);
-
 fail:
     return this;
 }
@@ -129,7 +126,6 @@ void track_print(Track* this)
     printf("artist     = %s\n", this->artist);
     printf("album      = %s\n", this->album);
     printf("date       = %s\n", this->date);
-    printf("duration   = %s\n", this->duration);
     printf("format     = %s\n", this->format);
     printf("samplerate = %s\n", this->sample_rate);
     printf("lufs       = %f\n", this->lufs);
@@ -147,7 +143,6 @@ void track_free(Track* this)
     free(this->album);
     free(this->date);
     free(this->format);
-    free(this->duration);
     free(this->sample_rate);
     free(this);
 }

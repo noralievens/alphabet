@@ -280,7 +280,7 @@ help:
 	@echo '  man         convert doc/$(TARGET).md to manpage'
 	@echo '  doxy        build doxygen documentation'
 	@echo '  install     install in $(PREXIF)'
-	@echo '  uninstall   install from $(PREXIF)'
+	@echo '  uninstall   uninstall from $(PREXIF)'
 	@echo '  deb         builb .deb package'
 	@echo '  appimg      builb .AppImage package'
 	@echo '  app         build .app macos bundle'

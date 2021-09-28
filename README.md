@@ -8,7 +8,7 @@ A marker can be placed in the timeline to reset the playback on file selection o
 Alternatively, the user can loop a specified region.\
 Files can be opened in alphabet (file chooser), from the file manager (must use .app bundle on MacOs), command-line arguments or dragged into alphabet (only in linux so far).
 
-![Alt text](./screenshot.png?raw=true "Screenshot")
+<img src="screenshot.png" alt="screenshot" width="400"/>
 
 ### doc
 [manual](doc/alphabet.md)

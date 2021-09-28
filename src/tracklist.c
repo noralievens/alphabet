@@ -29,7 +29,7 @@
 * @param this
 * @param selection the selected track (max 1)
 */
-static void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection);
+static void selection_changed(Tracklist* this, GtkTreeSelection* selection);
 
 /**
  * function used by load_thread threadpool to async load tracks
@@ -37,7 +37,7 @@ static void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* se
  * @param data file closure from thread_pool_push call
  * @param user_data tracklist object closure from thread_pool_new
  */
-static void tracklist_load_async(gpointer data, gpointer user_data);
+static void load_async(gpointer data, gpointer user_data);
 
 /*
  * Drag-and-Drop signal handlers
@@ -48,7 +48,7 @@ static gboolean drag_motion(GtkTreeView* tree, GdkDragContext* ctx, gint x,
 gint y, guint time, gpointer user_data);
 
 static gboolean drag_drop(GtkTreeView* tree, GdkDragContext* ctx, gint x,
-gint y, guint time, gpointer user_data);
+gint y, guint time, Tracklist* this);
 
 static void drag_data_get (GtkTreeView* tree, GdkDragContext* ctx,
 GtkSelectionData* selection, guint info, guint time, gpointer data);
@@ -122,7 +122,7 @@ Tracklist* tracklist_new(Player* player)
     int foo = 1;
 
     this->load_thread = g_thread_pool_new(
-            tracklist_load_async, this, -1, FALSE, &err);
+            load_async, this, -1, FALSE, &err);
 
     if (err) {
         g_printerr("%s\n", err->message);
@@ -148,7 +148,7 @@ void tracklist_init(Tracklist* this)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
 
     g_signal_connect_swapped( selection, "changed",
-            G_CALLBACK(tracklist_on_selection_changed), this);
+            G_CALLBACK(selection_changed), this);
 
     id = TRACKLIST_COLUMN_NAME;
     column = gtk_tree_view_column_new();
@@ -428,27 +428,32 @@ void tracklist_free(Tracklist* this)
  *
  */
 
-void tracklist_on_selection_changed(Tracklist* this, GtkTreeSelection* selection)
+void selection_changed(Tracklist* this, GtkTreeSelection* selection)
 {
     Track* track;
     GtkTreeIter iter;
-    /* TODO don't need to set model, its set in ..._get_selection */
-    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
+    GtkTreeModel* model;
+    gdouble position = 0.0;
 
     gtk_tree_selection_get_selected(selection, &model, &iter);
     if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;
     gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
-
-    gdouble position = 0.0;
-    if (this->player->marker != 0.0) position = this->player->marker;
-    else if (!this->player->rtn) position = player_update(this->player);
-    player_load_track(this->player, track, position);
+    player_load_track(this->player, track);
 }
 
-void tracklist_load_async(gpointer data, gpointer user_data)
+void load_async(gpointer file_data, gpointer tracklist_data)
 {
-    Tracklist* this = user_data;
-    GFile* file = data;
+    /* the load-async handler is invoked when the thread_pool receives new data
+     * (called by g_thread_pool_push() in insert_file() or append_file()
+     * the file GObject in "file_data" has the row (path) as well as the
+     * before/after (pos) information embedded as data
+     * it is extracted here to call add_track
+     * file is unreffed here as it needs to stay alive until file_to_track
+     * has finished
+     */
+
+    Tracklist* this = tracklist_data;
+    GFile* file = file_data;
     GtkTreePath* path = g_object_get_data(G_OBJECT(file), "path");
     GtkTreeViewDropPosition* pos = g_object_get_data(G_OBJECT(file), "position");
     Track* track = tracklist_file_to_track(this, file);
@@ -467,6 +472,11 @@ void drag_begin(GtkTreeView *tree, GdkDragContext *ctx, Tracklist* this)
 gboolean drag_motion(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y,
 guint time, gpointer user_data)
 {
+    /* drag-motion handler is connected to the drag destination and therefore
+     * relevant to drops from within the tree as well as external files
+     * this hanler is responsible for notifying the tree which row to highlight
+     */
+
     GdkAtom target = gtk_drag_dest_find_target(GTK_WIDGET(tree), ctx, NULL);
 
     if (target != GDK_NONE) {
@@ -486,10 +496,20 @@ guint time, gpointer user_data)
 }
 
 gboolean drag_drop(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y,
-guint time, gpointer user_data)
+guint time, Tracklist* this)
 {
+
+    /* data-drop handler is connected to the drag destination and therefore
+     * relevant to drops from within the tree as well as external files
+     * we call get_data() here in order to override stock data-received handler
+     * first we set the ListStore to un-sortable to allow drops in the tree
+     */
+
     GdkAtom target = gtk_drag_dest_find_target(GTK_WIDGET(tree), ctx, NULL);
     if (target != GDK_NONE) {
+        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(this->list),
+                GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID, 0);
+
         gtk_drag_get_data(GTK_WIDGET(tree), ctx, target, time);
         return TRUE;
     }
@@ -499,7 +519,11 @@ guint time, gpointer user_data)
 void drag_data_get (GtkTreeView* tree, GdkDragContext* ctx,
 GtkSelectionData* selection, guint info, guint time, gpointer data)
 {
-    printf("drag-data-get\n");
+    /* data-get handler is connected to the drag source and therefore
+     * only relevant to drags from within the tree
+     * we grab the row selected and load into selection
+     * it will be picked up by data-received handler
+     */
 
     switch (info) {
         case TRACKLIST_ENTRY_ROW: {
@@ -507,8 +531,9 @@ GtkSelectionData* selection, guint info, guint time, gpointer data)
             GtkTreeModel* model;
             GtkTreeIter iter;
             GtkTreePath* path;
+            GtkTreeSelection* tree_selection;
 
-            GtkTreeSelection* tree_selection = GTK_TREE_SELECTION(gtk_tree_view_get_selection(tree));
+            tree_selection = GTK_TREE_SELECTION(gtk_tree_view_get_selection(tree));
 
             gtk_tree_selection_get_selected(tree_selection, &model, &iter);
             path = gtk_tree_model_get_path(model, &iter);
@@ -525,22 +550,37 @@ GtkSelectionData* selection, guint info, guint time, gpointer data)
 void drag_data_received(GtkTreeView* tree, GdkDragContext *ctx, gint x, gint y,
 GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
 {
-    gint wx, wy;
+    /* drag-data-received handler is connected to the drag-destination
+     * the signal is invoked by drag-data-get and overrides the default handler
+     * first we determine if the selection contains a TREE_ROW or STRING target
+     * a TREE_ROW is moved in place, an external file (STR) is inserted in the
+     * tracklist
+     */
 
-    printf("drag-data-received\n");
+    gint wx, wy;
     switch (info) {
+
+        /* external file handler */
         case TRACKLIST_ENTRY_STR: {
+
             GtkTreePath* path;
             GtkTreeViewDropPosition pos;
-
-            /* destination path retrieved here - free-ed by async loadfile */
-            gtk_tree_view_get_dest_row_at_pos(tree, x, y, &path, &pos);
-
-            /* tfw why \r ?? */
+            char* uri, * str;
             const gchar* delim = "\r\n";
             const guchar* uris = gtk_selection_data_get_data(selection);
-            char* str = g_strdup((const char*)uris);
-            char* uri;
+
+            /* the STRING recevied in "selection" is a list of uris provided by
+             * the unerlying dnd handler
+             * somehow the file uris are line separated with <CR><LF>
+             * we split them here and create files from uri for each line
+             *
+             * the destination row position (path) is retrieved here but
+             * free-ed by the async_loader
+             */
+
+            gtk_tree_view_get_dest_row_at_pos(tree, x, y, &path, &pos);
+
+            str = g_strdup((const char*)uris);
             uri = strtok(str, delim);
             do {
                 GFile* file = g_file_new_for_uri(uri);
@@ -552,6 +592,7 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
             break;
         }
 
+        /* TREE_ROW handler */
         case TRACKLIST_ENTRY_ROW: {
 
             GtkTreeModel* model;
@@ -559,6 +600,11 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
             GtkTreeIter src_iter, dst_iter;
             GtkTreeIter* destination = NULL;
             GtkTreeViewDropPosition pos = GTK_TREE_VIEW_DROP_AFTER;
+
+            /* row is manually moved to the proper destination
+             * using the default hadler for dnd'ing TREE_ROWS could have been
+             * an option but unfortunately buggish on MacOs
+             */
 
             gtk_tree_get_row_drag_data(selection, &model, &src_path);
             gtk_tree_model_get_iter(model, &src_iter, src_path);
@@ -568,8 +614,8 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
                 destination = &dst_iter;
             }
 
-            /* when no drop position found, (cursor dropped under tree rows)
-             * the row should be dropped at the end of the list by calling
+            /* when no drop position found, (drop released underneath last row)
+             * the row should be appended at the end of the list by calling
              * ..._move_before(..., ..., NULL) which is a bit counterinuitive
              */
 
@@ -600,12 +646,12 @@ gpointer user_data)
 
 void drag_data_delete(GtkWidget* tree, GdkDragContext* ctx, gpointer user_data)
 {
-    printf("drag-delete\n");
+    /* printf("drag-delete\n"); */
 }
 
 gboolean drag_data_failed(GtkWidget *tree, GdkDragContext *ctx,
 GtkDragResult result, gpointer user_data)
 {
-    printf("drag-failed: %d\n", result);
+    /* printf("drag-failed: %d\n", result); */
     return FALSE;
 }

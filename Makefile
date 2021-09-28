@@ -26,13 +26,17 @@ INCLUDES       +=
 CC              = gcc
 CFLAGS          = -DVERSION=\"$(VERSION)\"
 # CFLAGS           += -DDEBUG -g
-CFLAGS         += -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow
+CFLAGS         += -std=gnu11 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
-CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings -Wcast-qual
+CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings
 CFLAGS         += -Wswitch-default
 CFLAGS         += -Wunreachable-code
+CFLAGS         += -Wdiscarded-qualifiers -Wcast-qual
+
+# CFLAGS         += -Wno-unused-parameter
+# CFLAGS         += -Wno-unused-variable
 # CFLAGS           += -Wswitch-enum
-# CFLAGS           += -Wconversion
+CFLAGS           += -Wconversion
 
 CTAGS           = ctags
 CTAGSFLAGS      =
@@ -208,7 +212,7 @@ deb: install
 	@printf "\e[0;32m%s\e[0m\n" "built $(DEB_PKG)"
 
 appimg: install
-	mkdir -p    $(DIST_DIR)/$(TARGET)
+	mkdir -pv   $(DIST_DIR)/$(TARGET)
 	linuxdeploy --appdir $(DIST_DIR)/$(TARGET) --output appimage
 	mv -v       *.AppImage $(DIST_DIR)/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APPIMG_PKG)"
@@ -232,15 +236,17 @@ $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET).png
 
 app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	rm -fr      $(APP_PKG)
-	rm -f 		$(APP_PKG).dmg
-	cp -fvr 	$(MAC_DIR) \
-				$(APP_PKG)
-	cp -fv		$(BIN_DIR)/$(TARGET) \
-				$(APP_PKG)/Contents/MacOs/$(TARGET)-bin
+	mkdir -pv 	$(DIST_DIR)
+	cp -fvr     $(MAC_DIR) \
+	            $(APP_PKG)
+	cp -fv      $(BIN_DIR)/$(TARGET) \
+	            $(APP_PKG)/Contents/MacOs/$(TARGET)-bin
 	dylibbundler -od -b -x \
 	            $(APP_PKG)/Contents/MacOS/$(TARGET)-bin -d \
 	            $(APP_PKG)/Contents/Resources/lib
-	create-dmg  $(APP_PKG) .
+	rm -fv 		$(DIST_DIR)/*.dmg
+	create-dmg  $(APP_PKG) \
+		        $(DIST_DIR)
 	@printf "\e[0;32m%s\e[0m\n" "built $(APP_PKG)"
 
 brew:
@@ -274,7 +280,7 @@ help:
 	@echo '  man         convert doc/$(TARGET).md to manpage'
 	@echo '  doxy        build doxygen documentation'
 	@echo '  install     install in $(PREXIF)'
-	@echo '  uninstall   install from $(PREXIF)'
+	@echo '  uninstall   uninstall from $(PREXIF)'
 	@echo '  deb         builb .deb package'
 	@echo '  appimg      builb .AppImage package'
 	@echo '  app         build .app macos bundle'

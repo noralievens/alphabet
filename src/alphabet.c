@@ -101,7 +101,7 @@ void on_click_add(GtkWindow* window)
     if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(chsr)) == GTK_RESPONSE_ACCEPT) {
 
         GSList* filelist = gtk_file_chooser_get_files(GTK_FILE_CHOOSER(chsr));
-        do tracklist_add_file(tracklist, filelist->data);
+        do tracklist_append_file(tracklist, filelist->data);
         while ((filelist = filelist->next));
 
         g_slist_free(filelist);
@@ -244,17 +244,32 @@ void on_startup(UNUSED GApplication* alphabet, UNUSED gpointer data)
 
     /* create tracklist here because "open" dependes on tracklist
      * on_open is called before activate
-     * widgets are created in on_active by calling tracklist_init */
-    tracklist = tracklist_new(player);
+     * widgets are created in on_active by calling tracklist_init
+     */
+
+    if (!(tracklist = tracklist_new(player))) {
+        on_destroy(NULL, NULL);
+        g_application_quit(alphabet);
+    }
 }
 
 void on_open(GApplication *alphabet, GFile **files, gint n, UNUSED const char* hint)
 {
     for (gint i = 0; i < n; i++) {
-        tracklist_add_file(tracklist, files[i]);
-        /* must - cannot unref file?? */
-        /* g_object_unref(files[i]); */
+
+        /* files will be free-ed by tracklist when finnished (async)
+         * the files array here is apparently owned by gtk and must therefore
+         * be duplicated for consistency
+         */
+
+        GFile* file = g_file_dup(files[i]);
+        tracklist_append_file(tracklist, file);
     }
+
+    /* gtk does not automatically emit "activate" signal when "open" signal
+     * handler is called - manually call the "on-active" handler here
+     */
+
     on_activate(GTK_APPLICATION(alphabet));
 }
 
@@ -262,9 +277,7 @@ void on_open(GApplication *alphabet, GFile **files, gint n, UNUSED const char* h
 gboolean on_open_osx(UNUSED GtkosxApplication* app, char* path, UNUSED gpointer user_data)
 {
     GFile* file = g_file_new_for_path(path);
-    tracklist_add_file(tracklist, file);
-    /* TODO check unreffing GFile - cannot unref here because async add_file */
-    /* g_object_unref(file); */
+    tracklist_append_file(tracklist, file);
     return TRUE;
 }
 #endif
@@ -281,12 +294,12 @@ gboolean on_destroy(UNUSED GtkWidget* window, UNUSED GtkApplication* alphabet)
 
 int main(int argc, char *argv[])
 {
-    int status, flags;
+    int status;
     GtkApplication* alphabet;
 
-    flags =   G_APPLICATION_ALLOW_REPLACEMENT
-            | G_APPLICATION_REPLACE
-            | G_APPLICATION_HANDLES_OPEN;
+    GApplicationFlags flags = G_APPLICATION_ALLOW_REPLACEMENT
+                            | G_APPLICATION_REPLACE
+                            | G_APPLICATION_HANDLES_OPEN;
 
     alphabet = gtk_application_new("org.gtk.alphabet", flags);
 
@@ -298,6 +311,5 @@ int main(int argc, char *argv[])
 
     g_application_quit(G_APPLICATION(alphabet));
 
-    /* player_free(player); */
     return status;
 }

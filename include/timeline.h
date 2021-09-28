@@ -19,6 +19,8 @@ typedef struct {
     GdkRGBA position;
     GdkRGBA loop;
     GdkRGBA marker;
+    GdkRGBA wave;
+    GtkImage* image;
 } Timeline;
 
 /**
@@ -38,7 +40,6 @@ extern Timeline* timeline_new(Player* player);
 * @param this the timeline object
 */
 extern void timeline_update(Timeline* this);
-
 
 /**
  * Free all resources

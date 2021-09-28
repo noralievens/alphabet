@@ -6,7 +6,6 @@
  * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
-#include <assert.h>
 #include <errno.h>
 #include <locale.h>
 #include <math.h>
@@ -22,26 +21,27 @@
 
 #include "../include/player.h"
 
-#ifndef MAX
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef CLAMP
-#define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-#endif
-
-#ifndef ELEMENTS
-#define ELEMENTS(arr) (sizeof (arr) / sizeof ((arr)[0]))
-#endif
-
-
-/* static double volume_to_db(double volume); */
+/**
+ * Convert dB (double) to mpv volume number
+ *
+ * @param volume volume in dB relative to 0dB = volume 100
+ * @return double volume parameter mpv understands
+ */
 static double db_to_volume(double volume);
+
+/**
+ * Print mpv error if available
+ *
+ * @param cmd optional message to be included in error
+ * @param status the mpv status code
+ */
 static void mpv_print_status(const char* cmd, int status);
+
+
+/*******************************************************************************
+ * extern functions
+ */
+
 
 void player_set_speed(Player* this, gdouble speed)
 {
@@ -58,12 +58,24 @@ void player_stop(Player* this)
 {
     int status;
     const char* cmd[] = {"stop", NULL};
+
+    player_goto(this, 0.0);
+
+    /* update the play_state here to running load_track
+     * whit outdated play_state due to async state update
+     */
+
+    this->play_state = PLAY_STATE_STOP;
+
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
         mpv_print_status("stop", status);
     }
-    if (this->current) player_load_track(this, this->current, 0);
+
+    if (this->current) {
+        player_load_track(this, this->current);
+    }
+
     player_pause(this);
-    if (this->rtn) player_goto(this, 0);
 }
 
 void player_pause(Player* this)
@@ -79,7 +91,6 @@ void player_pause(Player* this)
 
 void player_toggle(Player* this)
 {
-    /* FIXME find proper play - pause methods */
     int status;
 
     const char* cmd[] = {"cycle", "pause", NULL};
@@ -106,18 +117,18 @@ void player_loop(Player* this)
     const char* cmd[] = {"ab-loop", NULL};
 
     /* cancel loop */
-    if (this->loop_start && this->loop_stop) {
+    if (this->loop_start != 0.0 && this->loop_stop != 0.0) {
         this->loop_start = 0.0;
         this->loop_stop = 0.0;
 
     /* mark loop stop (B) */
-    } else if (this->loop_start) {
-        this->loop_stop = player_update(this);
+    } else if (this->loop_start != 0.0) {
+        this->loop_stop = player_get_position(this);
 
     /* mark loop start (A) */
     } else {
         this->loop_stop = 0.0;
-        this->loop_start = player_update(this);
+        this->loop_start = player_get_position(this);
     }
 
     if ((status = mpv_command(this->mpv, cmd)) < 0) {
@@ -127,7 +138,7 @@ void player_loop(Player* this)
 
 void player_mark(Player* this)
 {
-    this->marker = player_update(this);
+    this->marker = player_get_position(this);
 }
 
 void player_goto(Player* this, double position)
@@ -146,25 +157,39 @@ void player_goto(Player* this, double position)
 }
 
 /** deprecated */
-double player_update(Player* this)
+double player_get_position(Player* this)
 {
     mpv_get_property(this->mpv, "time-pos", MPV_FORMAT_DOUBLE, &this->position);
     return this->position;
 }
 
-void player_load_track(Player* this, Track* track, double position)
+void player_load_track(Player* this, Track* track)
 {
     int status;
     char posstr[99];
-    position = CLAMP(position, 0, track->length);
-    double gain, volume;
+    double gain, volume, position = 0.0;
 
+    /* automatically deduce the position
+     * when STOPPED position reverts to 0
+     * when marker is set, position reverts to marker
+     * when rtn is not set, position is the current playing position
+     */
+
+    if (this->play_state != PLAY_STATE_STOP) {
+
+        if (this->marker != 0.0) {
+            position = this->marker;
+
+        } else if (!this->rtn) {
+            position = player_get_position(this);
+        }
+    }
 
     gain = this->min_lufs - track->lufs;
     volume = db_to_volume(gain);
 
     /* compensation for time-gap? */
-    if (position) position += 0.050;
+    /* if (position != 0.0) position += 0.050; */
 
     g_snprintf(posstr,
             ELEMENTS(posstr),

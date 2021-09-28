@@ -50,9 +50,9 @@ extern void player_mark(Player* this);
 
 extern void player_goto(Player* this, double position);
 
-extern double player_update(Player* this);
+extern double player_get_position(Player* this);
 
-extern void player_load_track(Player* this, Track* track, double position);
+extern void player_load_track(Player* this, Track* track);
 
 extern int player_event_handler(Player* this);
 

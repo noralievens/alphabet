@@ -7,7 +7,7 @@
 TARGET          = alphabet
 NAME            = Alphabet
 DESCRIPTION     = audioplayer
-VERSION         = 0.1
+VERSION         = 0.11
 AUTHOR          = arnolievens@gmail.com
 DATE            = 08/09/2021
 CONFIG          = config.mk

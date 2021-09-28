@@ -13,22 +13,6 @@
 
 #include <mpv/client.h>
 
-#ifndef MAX
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef CLAMP
-#define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-#endif
-
-#ifndef ELEMENTS
-#define ELEMENTS(arr) (sizeof (arr) / sizeof ((arr)[0]))
-#endif
-
 typedef enum PlayState {
     PLAY_STATE_PLAY,
     PLAY_STATE_STOP,

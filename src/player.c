@@ -6,7 +6,6 @@
  * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
-#include <assert.h>
 #include <errno.h>
 #include <locale.h>
 #include <math.h>
@@ -22,9 +21,26 @@
 
 #include "../include/player.h"
 
-
+/**
+ * Convert dB (double) to mpv volume number
+ *
+ * @param volume volume in dB relative to 0dB = volume 100
+ * @return double volume parameter mpv understands
+ */
 static double db_to_volume(double volume);
+
+/**
+ * Print mpv error if available
+ *
+ * @param cmd optional message to be included in error
+ * @param status the mpv status code
+ */
 static void mpv_print_status(const char* cmd, int status);
+
+
+/*******************************************************************************
+ * extern functions
+ */
 
 
 void player_set_speed(Player* this, gdouble speed)

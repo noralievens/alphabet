@@ -21,8 +21,6 @@
 #include "../include/track.h"
 #include "../include/tracklist.h"
 
-/* static gboolean (*GtkTreeViewSearchEqualFunc) (GtkTreeModel *model, gint column, const gchar *key, GtkTreeIter *iter, gpointer search_data) */
-
 /**
 * Play the selected song in player
 *
@@ -119,7 +117,6 @@ Tracklist* tracklist_new(Player* player)
      *  - tracklist_inset_file
      * FIXME: only works for MAX THREADS = -1 - segfault for limited threads
      */
-    int foo = 1;
 
     this->load_thread = g_thread_pool_new(
             load_async, this, -1, FALSE, &err);
@@ -331,7 +328,11 @@ Track* tracklist_file_to_track(UNUSED Tracklist* this, GFile* file)
         g_printerr("Error getting mimetype for file \"%s\"\n", path);
         goto fail;
     }
-    if (!g_strstr_len(type, -1, "audio") && !g_strstr_len(type, -1, "org.xiph.flac")) {
+
+    /* TODO: find a better way (lib?) to determine file == audio file??? */
+    if (    !g_strstr_len(type, -1, "audio") &&
+            !g_strstr_len(type, -1, "org.xiph.flac"))
+    {
         g_printerr("Error loading file \"%s\": Not and audio file\n", path);
         goto fail;
     }
@@ -360,7 +361,8 @@ fail:
     return track;
 }
 
-void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path, GtkTreeViewDropPosition pos)
+void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path,
+GtkTreeViewDropPosition pos)
 {
     GError* err = NULL;
 
@@ -380,6 +382,8 @@ void tracklist_insert_file(Tracklist* this, GFile* file, GtkTreePath* path, GtkT
 
 void tracklist_append_file(Tracklist* this, GFile* file)
 {
+    /* use the functionality of insert_file but set path to NULL to append */
+
     tracklist_insert_file(this, file, NULL, 0);
 }
 
@@ -402,10 +406,16 @@ void tracklist_free(Tracklist* this)
     GtkTreeModel* model = GTK_TREE_MODEL(this->list);
     Track* track;
     GtkTreeIter iter;
-    GtkTreeSelection* selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
+    GtkTreeSelection* selection;
 
+    /* free each track contained in tracklist before destroying ourselves
+     * we must first disconnect the selction signal handler or tracklist will
+     * trigger play after each trag that gets deleted and selection moves to
+     * the next track
+     */
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
     g_signal_handlers_disconnect_by_data(selection, this);
-
     gtk_tree_selection_get_selected(selection, &model, &iter);
 
     while (gtk_list_store_iter_is_valid(this->list, &iter)) {
@@ -433,7 +443,6 @@ void selection_changed(Tracklist* this, GtkTreeSelection* selection)
     Track* track;
     GtkTreeIter iter;
     GtkTreeModel* model;
-    gdouble position = 0.0;
 
     gtk_tree_selection_get_selected(selection, &model, &iter);
     if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;
@@ -464,13 +473,14 @@ void load_async(gpointer file_data, gpointer tracklist_data)
     g_object_unref(file);
 }
 
-void drag_begin(GtkTreeView *tree, GdkDragContext *ctx, Tracklist* this)
+void drag_begin(UNUSED GtkTreeView *tree, UNUSED GdkDragContext *ctx,
+UNUSED Tracklist* this)
 {
     /* printf("drag-begin\n"); */
 }
 
 gboolean drag_motion(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y,
-guint time, gpointer user_data)
+guint time, UNUSED gpointer user_data)
 {
     /* drag-motion handler is connected to the drag destination and therefore
      * relevant to drops from within the tree as well as external files
@@ -495,8 +505,8 @@ guint time, gpointer user_data)
     return FALSE;
 }
 
-gboolean drag_drop(GtkTreeView* tree, GdkDragContext* ctx, gint x, gint y,
-guint time, Tracklist* this)
+gboolean drag_drop(GtkTreeView* tree, GdkDragContext* ctx, UNUSED gint x,
+UNUSED gint y, guint time, Tracklist* this)
 {
 
     /* data-drop handler is connected to the drag destination and therefore
@@ -516,8 +526,8 @@ guint time, Tracklist* this)
     return FALSE;
 }
 
-void drag_data_get (GtkTreeView* tree, GdkDragContext* ctx,
-GtkSelectionData* selection, guint info, guint time, gpointer data)
+void drag_data_get (GtkTreeView* tree, UNUSED GdkDragContext* ctx,
+GtkSelectionData* selection, guint info, UNUSED guint time, UNUSED gpointer dat)
 {
     /* data-get handler is connected to the drag source and therefore
      * only relevant to drags from within the tree
@@ -557,7 +567,6 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
      * tracklist
      */
 
-    gint wx, wy;
     switch (info) {
 
         /* external file handler */
@@ -638,19 +647,20 @@ GtkSelectionData *selection, guint info, guint32 time, Tracklist* this)
     gtk_drag_finish(ctx, FALSE, FALSE, time);
 }
 
-void drag_leave(GtkWidget* tree, GdkDragContext* ctx, guint time,
-gpointer user_data)
+void drag_leave(UNUSED GtkWidget* tree, UNUSED GdkDragContext* ctx,
+UNUSED guint time, UNUSED gpointer user_data)
 {
     /* printf("leave\n"); */
 }
 
-void drag_data_delete(GtkWidget* tree, GdkDragContext* ctx, gpointer user_data)
+void drag_data_delete(UNUSED GtkWidget* tree, UNUSED GdkDragContext* ctx,
+UNUSED gpointer user_data)
 {
     /* printf("drag-delete\n"); */
 }
 
-gboolean drag_data_failed(GtkWidget *tree, GdkDragContext *ctx,
-GtkDragResult result, gpointer user_data)
+gboolean drag_data_failed(UNUSED GtkWidget *tree, UNUSED GdkDragContext *ctx,
+UNUSED GtkDragResult result, UNUSED gpointer user_data)
 {
     /* printf("drag-failed: %d\n", result); */
     return FALSE;

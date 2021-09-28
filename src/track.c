@@ -1,5 +1,4 @@
 /**
-    printf("time: %s\n", dest);
  * @author      Arno Lievens (arnolievens@gmail.com)
  * @date        08/09/2021
  * @file        track.c
@@ -7,7 +6,6 @@
  * @copyright   Copyright (c) 2021 Arno Lievens
  */
 
-#include <assert.h>
 #include <ebur128.h>
 #include <errno.h>
 #include <libavformat/avformat.h>
@@ -24,19 +22,69 @@
 
 #include "../include/track.h"
 
-static char* stralloc(const char* src);
-static void set_libav_tags(Track* this);
+/**
+ * Set metadata if available
+ *
+ * overrides the .name property if TITLE or NAME is available
+ *
+ * @param track the Track object
+ */
+static void track_set_libav_tags(Track* this);
 
-static void set_r128(Track* this, SF_INFO* file_info, SNDFILE* file);
-static void set_file_info(Track* this, SF_INFO* file_info);
+/**
+ * Calculate aver loudness
+ *
+ * sets the loudness .lufs property in track
+ *
+ * @param this the track object
+ */
+static void track_set_r128(Track* this, SF_INFO* file_info, SNDFILE* file);
+
+/**
+ * Read file info with libsndfile
+ *
+ * sets the samplerate, format, ... properties in track
+ *
+ * @param this the track object
+ * @param file_info the file info object
+ */
+static void track_set_file_info(Track* this, SF_INFO* file_info);
+
+/**
+ * Allocate and copy string
+ *
+ * convenience function to easily malloc and copy string
+ * must be free-ed by caller
+ *
+ * @param src the string to be copied
+ * @return the new string or NULL when failed to allocate
+ */
+static char* stralloc(const char* src);
+
+
+/*******************************************************************************
+ * extern functions
+ */
+
 
 Track* track_new(const char* name, const char* path)
 {
-    if (!path) return NULL;
-
-    Track* this = malloc(sizeof(Track));
+    Track* this = NULL;
     SF_INFO file_info = { 0 };
     SNDFILE* file;
+
+    /* allocate new track and set defaults
+     * the name used by default is probided by the argument but overwritten
+     * by TITLE or NAME tag if present
+     * average loudness is calculated by r123
+     */
+
+    if (!path) goto fail;
+
+    if (!(this = malloc(sizeof(Track)))) {
+        fprintf(stderr, "failed to allocate track\n");
+        goto fail;
+    }
 
     this->artist = NULL;
     this->album = NULL;
@@ -52,15 +100,15 @@ Track* track_new(const char* name, const char* path)
     if (name) this->name = stralloc(name);
     else this->name = stralloc(path);
 
-    set_libav_tags(this);
+    track_set_libav_tags(this);
 
     if (!(file = sf_open(this->path, SFM_READ, &file_info))) {
         fprintf(stderr, "sndfile failed to open file\"%s\"\n", this->path);
         return NULL;
     }
 
-    set_file_info(this, &file_info);
-    set_r128(this, &file_info, file);
+    track_set_file_info(this, &file_info);
+    track_set_r128(this, &file_info, file);
 
     if (sf_close(file) != 0) {
         fprintf(stderr, "sndfile failed to close file\"%s\"\n", this->path);
@@ -70,7 +118,7 @@ Track* track_new(const char* name, const char* path)
     this->duration = calloc(9, sizeof(char));
     dtoduration(this->duration, this->length);
 
-    /* track_print(this); */
+fail:
     return this;
 }
 
@@ -93,15 +141,14 @@ void track_free(Track* this)
 {
     if (!this) return;
 
-    if (this->path) free(this->path);
-    if (this->name) free(this->name);
-    if (this->artist) free(this->artist);
-    if (this->album) free(this->album);
-    if (this->date) free(this->date);
-    if (this->format) free(this->format);
-    if (this->duration) free(this->duration);
-    if (this->sample_rate) free(this->sample_rate);
-    /* cannot - must not unref file ??*/
+    free(this->path);
+    free(this->name);
+    free(this->artist);
+    free(this->album);
+    free(this->date);
+    free(this->format);
+    free(this->duration);
+    free(this->sample_rate);
     free(this);
 }
 
@@ -111,21 +158,22 @@ void track_free(Track* this)
  *
  */
 
+
 char* stralloc(const char* src)
 {
-    if (!src) return NULL;
     char* dest;
+
+    if (!src) return NULL;
     if (!(dest = calloc(strlen(src)+1, sizeof(src)))) {
         fprintf(stderr, "could allocate string for \"%s\"\n", src);
+        return NULL;
     }
     strcpy(dest, src);
 
     return dest;
 }
 
-
-
-void set_libav_tags(Track* this)
+void track_set_libav_tags(Track* this)
 {
     AVFormatContext* ctx = avformat_alloc_context();
     AVDictionaryEntry* tag = NULL;
@@ -133,8 +181,6 @@ void set_libav_tags(Track* this)
 
     avformat_open_input(&ctx, this->path, NULL, NULL);
     avformat_find_stream_info(ctx, NULL);
-
-    /* this->length = (double)ctx->duration / AV_TIME_BASE; */
 
     /* print all tags */
     /* while ((tag = av_dict_get(ctx->metadata, "", tag, flags))) {
@@ -158,20 +204,12 @@ void set_libav_tags(Track* this)
     if ((tag = av_dict_get(ctx->metadata, "date", NULL, flags))) {
         this->date = stralloc(tag->value);
     }
-    /* if ((tag = av_dict_get(ctx->metadata, "replaygain_track_gain", NULL, flags))) { */
-    /*     double gain = strtod(tag->value, NULL); */
-    /*     this->gain = gain; */
-    /* } */
-    /* if ((tag = av_dict_get(ctx->metadata, "replaygain_track_peak", NULL, flags))) { */
-    /*     double peak = strtod(tag->value, NULL); */
-    /*     this->peak = peak; */
-    /* } */
 
     avformat_close_input(&ctx);
     avformat_free_context(ctx);
 }
 
-void set_file_info(Track* this, SF_INFO* file_info)
+void track_set_file_info(Track* this, SF_INFO* file_info)
 {
     const size_t len = 7;
     this->sample_rate = calloc(len+1, sizeof(char));
@@ -181,7 +219,7 @@ void set_file_info(Track* this, SF_INFO* file_info)
     return;
 }
 
-void set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
+void track_set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
 {
     sf_count_t frames_read;
     ebur128_state* sts = NULL;

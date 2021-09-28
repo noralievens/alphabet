@@ -33,8 +33,8 @@ CFLAGS         += -Wswitch-default
 CFLAGS         += -Wunreachable-code
 CFLAGS         += -Wdiscarded-qualifiers -Wcast-qual
 
-CFLAGS         += -Wno-unused-parameter
-CFLAGS         += -Wno-unused-variable
+# CFLAGS         += -Wno-unused-parameter
+# CFLAGS         += -Wno-unused-variable
 # CFLAGS           += -Wswitch-enum
 CFLAGS           += -Wconversion
 

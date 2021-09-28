@@ -12,6 +12,10 @@
 #include <gtk/gtk.h>
 
 #define UNUSED __attribute__((unused))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#define ELEMENTS(arr) (sizeof (arr) / sizeof ((arr)[0]))
 
 #define ICON_SIZE   GTK_ICON_SIZE_MENU
 #define MARGIN      12
@@ -26,7 +30,7 @@
 /**
  * Convert double to duration string
  *
- * output format is mm:ss.xxxxxxxx
+ * output format is mm:ss.xxx
  *
  * @param dest string destination
  * @param num double to convert

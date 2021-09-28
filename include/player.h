@@ -13,6 +13,22 @@
 
 #include <mpv/client.h>
 
+#ifndef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#ifndef CLAMP
+#define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#endif
+
+#ifndef ELEMENTS
+#define ELEMENTS(arr) (sizeof (arr) / sizeof ((arr)[0]))
+#endif
+
 typedef enum PlayState {
     PLAY_STATE_PLAY,
     PLAY_STATE_STOP,
@@ -50,9 +66,9 @@ extern void player_mark(Player* this);
 
 extern void player_goto(Player* this, double position);
 
-extern double player_update(Player* this);
+extern double player_get_position(Player* this);
 
-extern void player_load_track(Player* this, Track* track, double position);
+extern void player_load_track(Player* this, Track* track);
 
 extern int player_event_handler(Player* this);
 

@@ -39,21 +39,22 @@ static gboolean on_click(Timeline* this, GdkEvent* event, GtkWidget* darea)
 
 static gboolean on_draw(Timeline* this, cairo_t* cr, GtkWidget* darea)
 {
-    if (!this->player->current || !this->player->current->length) return FALSE;
+    if (!this->player->current || this->player->current->length == 0.0) return FALSE;
     gint w = gtk_widget_get_allocated_width(darea);
     gint h = gtk_widget_get_allocated_height(darea);
     gdouble x;
     gdouble scale = this->player->current->length / w;
 
+
     /* draw loop */
-    if (this->player->loop_start) {
+    if (this->player->loop_start != 0.0) {
         gdouble x_start = this->player->loop_start / scale;
         gdk_cairo_set_source_rgba(cr, &this->loop);
         cairo_set_line_width(cr, 2);
         cairo_move_to(cr, x_start, 0);
         cairo_line_to(cr, x_start, h);
         cairo_stroke(cr);
-        if (this->player->loop_stop) {
+        if (this->player->loop_stop != 0.0) {
             gdk_cairo_set_source_rgba(cr, &this->loop);
             gdouble x_end = this->player->loop_stop / scale;
             cairo_rectangle(cr, x_start, 0, x_end - x_start, h);
@@ -62,7 +63,7 @@ static gboolean on_draw(Timeline* this, cairo_t* cr, GtkWidget* darea)
     }
 
     /* draw marker */
-    if (this->player->marker) {
+    if (this->player->marker != 0.0) {
         gdouble x_mark = this->player->marker / scale;
         gdk_cairo_set_source_rgba(cr, &this->marker);
         cairo_move_to(cr, x_mark, 0);

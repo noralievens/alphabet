@@ -414,6 +414,7 @@ void tracklist_update_min_lufs(Tracklist* this)
         Track* track;
         gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
         min = MIN(track->lufs, min);
+
     } while (gtk_tree_model_iter_next(model, &iter));
 
      /* min_lufs is stored in tracklist but must be updated in player to take
@@ -434,6 +435,12 @@ void tracklist_remove_selected(Tracklist* this)
     gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
     gtk_list_store_remove(this->list, &iter);
     track_free(track);
+
+    /* check if we've just deleted the last track and stop the player */
+
+    if (!gtk_tree_model_get_iter_first(model, &iter)) {
+        player_stop(this->player);
+    }
 
     /* it's possible the removed track had the lowest loudness so we must
      * update min_lufs now
@@ -487,8 +494,7 @@ void selection_changed(Tracklist* this, GtkTreeSelection* selection)
     GtkTreeIter iter;
     GtkTreeModel* model;
 
-    gtk_tree_selection_get_selected(selection, &model, &iter);
-    if (!gtk_list_store_iter_is_valid(this->list, &iter)) return;
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) return;
     gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
     player_load_track(this->player, track);
 }

@@ -102,6 +102,7 @@ extern void tracklist_append_file(Tracklist* this, GFile* file);
  * a new Track is allocated and stored in the list
  * all Tracks can be free-ed by tracklist_free
  * track will be inserted in the list before or after (pos) given row (path)
+ * set path to NULL to append
  * file will be free-ed when async loader has finished
  *
  * @param this tracklist object
@@ -128,6 +129,13 @@ extern void tracklist_remove_selected(Tracklist* this);
  * @return the newly created track or NULL
  */
 extern Track* tracklist_file_to_track(Tracklist* this, GFile* file);
+
+/**
+ * Re-calculate the lowest average loudness of all tracks
+ *
+ * @param this the tracklist object
+ */
+extern void tracklist_update_min_lufs(Tracklist* this);
 
 /**
  * Free all resources

@@ -12,6 +12,14 @@
 #include "config.h"
 
 /**
+ * Waveform loudness scanning time window
+ * lower value = more samples
+ * in msec
+ * this cannot be greater than the maximum_window_size (default = 400?)
+ */
+#define TIME_WINDOW 200UL
+
+/**
  * Track
  *
  * represents an audio file on disk
@@ -28,6 +36,8 @@ typedef struct Track {
     char* date;             /**< DATE tag if present or NULL */
     char* format;           /**< TODO: audio file format eg flac, mp3, wav */
     char* sample_rate;      /**< sample rate eg 44100 96000 */
+    double* waveform;       /**< */
+    size_t waveform_len;    /**< */
 } Track;
 
 /**

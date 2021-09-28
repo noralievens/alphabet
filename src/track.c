@@ -95,6 +95,8 @@ Track* track_new(const char* name, const char* path)
     this->format = 0;
     this->length = 0;
     this->sample_rate = NULL;
+    this->waveform = NULL;
+    this->waveform_len = 0;
 
     this->path = stralloc(path);
     if (name) this->name = stralloc(name);
@@ -114,6 +116,7 @@ Track* track_new(const char* name, const char* path)
         fprintf(stderr, "sndfile failed to close file\"%s\"\n", this->path);
         return NULL;
     }
+
 
 fail:
     return this;
@@ -144,6 +147,7 @@ void track_free(Track* this)
     free(this->date);
     free(this->format);
     free(this->sample_rate);
+    free(this->waveform);
     free(this);
 }
 
@@ -223,6 +227,7 @@ void track_set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
     int flags = EBUR128_MODE_I | EBUR128_MODE_TRUE_PEAK;
     unsigned int sr = (unsigned int)file_info->samplerate;
     unsigned int chs = (unsigned int)file_info->channels;
+    sf_count_t window;
 
     if (!(sts = malloc(sizeof(ebur128_state*)))) {
         fprintf(stderr, "ebur128 malloc failed\n");
@@ -234,18 +239,42 @@ void track_set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
         return;
     }
 
+    /* allocate buffer used to read chunks of size "window"
+     */
+
     if (!(buffer = malloc(sts->samplerate * sts->channels * sizeof(double)))) {
         fprintf(stderr, "ebur128 malloc failed\n");
         return;
     }
 
-    while ((frames_read = sf_readf_double(file, buffer, (sf_count_t)sts->samplerate))) {
+    /* calculate the amount of samples we should read in order to get enough
+     * for the time window used for the waveform
+     */
+
+    window = (sf_count_t)((gdouble)sts->samplerate * TIME_WINDOW/1000.0);
+
+    /* allocate waveform buffer - we add one to make sure we don't get
+     * round-down erro due to int conversion
+     */
+
+    this->waveform_len = 1 + (size_t)(file_info->frames / window);
+
+    if (!(this->waveform = malloc(this->waveform_len * sizeof(double)))) {
+        fprintf(stderr, "ebur128 malloc failed\n");
+        return;
+    }
+
+    for (size_t n = 0; (frames_read = sf_readf_double(file, buffer, window));) {
         ebur128_add_frames_double(sts, buffer, (size_t)frames_read);
+        ebur128_loudness_window(sts, TIME_WINDOW, &this->waveform[n++]);
     }
 
     ebur128_loudness_global(sts, &lufs);
     this->lufs = lufs;
 
+    /* TODO: unclear what peak value really is exactly
+     * -dBFS ?
+     */
     ebur128_sample_peak(sts, 0, &peak);
     this->peak = peak;
 
@@ -255,3 +284,4 @@ void track_set_r128(Track* this, SF_INFO* file_info, SNDFILE* file)
     ebur128_destroy(&sts);
     free(sts);
 }
+

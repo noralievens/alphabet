@@ -39,12 +39,38 @@ static gboolean on_click(Timeline* this, GdkEvent* event, GtkWidget* darea)
 
 static gboolean on_draw(Timeline* this, cairo_t* cr, GtkWidget* darea)
 {
-    if (!this->player->current || this->player->current->length == 0.0) return FALSE;
     gint w = gtk_widget_get_allocated_width(darea);
     gint h = gtk_widget_get_allocated_height(darea);
     gdouble x;
-    gdouble scale = this->player->current->length / w;
+    gdouble scale;
 
+    if (!this->player->current || this->player->current->length == 0.0) {
+        return FALSE;
+    }
+
+    if (this->player->current) {
+        gdk_cairo_set_source_rgba(cr, &this->wave);
+        cairo_set_line_width(cr, 1);
+
+        gdouble* wave = this->player->current->waveform;
+        size_t len = this->player->current->waveform_len;
+        gdouble norm = h * TIMELINE_AVG_HEIGHT + this->player->current->lufs;
+
+        cairo_scale(cr, w / (gdouble)len, 1.0);
+
+        for (size_t i = 0; i < len; i++) {
+            gdouble y = - wave[i] + norm ;
+            cairo_line_to(cr, (gdouble)i, y);
+        }
+
+        cairo_close_path(cr);
+
+        cairo_fill(cr);
+        cairo_scale(cr, (gdouble)len / w, 1.0);
+    }
+
+    /* TODO: use cairo scale instead of calculating scale factor manually ?*/
+    scale = this->player->current->length / w;
 
     /* draw loop */
     if (this->player->loop_start != 0.0) {
@@ -66,6 +92,7 @@ static gboolean on_draw(Timeline* this, cairo_t* cr, GtkWidget* darea)
     if (this->player->marker != 0.0) {
         gdouble x_mark = this->player->marker / scale;
         gdk_cairo_set_source_rgba(cr, &this->marker);
+        cairo_set_line_width(cr, 2);
         cairo_move_to(cr, x_mark, 0);
         cairo_line_to(cr, x_mark, h);
         cairo_stroke(cr);
@@ -74,6 +101,7 @@ static gboolean on_draw(Timeline* this, cairo_t* cr, GtkWidget* darea)
     /* draw position */
     x = this->player->position / scale;
     gdk_cairo_set_source_rgba(cr, &this->position);
+    cairo_set_line_width(cr, 2);
     cairo_move_to(cr, x, 0);
     cairo_line_to(cr, x, h);
     cairo_stroke(cr);
@@ -101,6 +129,7 @@ Timeline* timeline_new(Player* player)
     assert(gdk_rgba_parse(&this->position, COLOR_TIMELINE_POSITION)
             && gdk_rgba_parse(&this->loop, COLOR_TIMELINE_LOOP)
             && gdk_rgba_parse(&this->marker, COLOR_TIMELINE_MARKER)
+            && gdk_rgba_parse(&this->wave, COLOR_TIMELINE_WAVE)
             && "allocate timeline colors");
 
     darea = gtk_drawing_area_new();

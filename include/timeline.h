@@ -19,6 +19,8 @@ typedef struct {
     GdkRGBA position;
     GdkRGBA loop;
     GdkRGBA marker;
+    GdkRGBA wave;
+    GtkImage* image;
 } Timeline;
 
 /**

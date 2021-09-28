@@ -48,26 +48,24 @@ static gboolean on_draw(Timeline* this, cairo_t* cr, GtkWidget* darea)
         return FALSE;
     }
 
-    if (this->player->current) {
-        gdk_cairo_set_source_rgba(cr, &this->wave);
-        cairo_set_line_width(cr, 1);
+    gdk_cairo_set_source_rgba(cr, &this->wave);
+    cairo_set_line_width(cr, 1);
 
-        gdouble* wave = this->player->current->waveform;
-        size_t len = this->player->current->waveform_len;
-        gdouble norm = h * TIMELINE_AVG_HEIGHT + this->player->current->lufs;
+    gdouble* wave = this->player->current->waveform;
+    size_t len = this->player->current->waveform_len;
+    gdouble norm = h * TIMELINE_AVG_HEIGHT + this->player->current->lufs;
 
-        cairo_scale(cr, w / (gdouble)len, 1.0);
+    cairo_scale(cr, w / (gdouble)len, 1.0);
 
-        for (size_t i = 0; i < len; i++) {
-            gdouble y = - wave[i] + norm ;
-            cairo_line_to(cr, (gdouble)i, y);
-        }
-
-        cairo_close_path(cr);
-
-        cairo_fill(cr);
-        cairo_scale(cr, (gdouble)len / w, 1.0);
+    for (size_t i = 0; i < len; i++) {
+        gdouble y = - wave[i] + norm ;
+        cairo_line_to(cr, (gdouble)i, y);
     }
+
+    cairo_close_path(cr);
+
+    cairo_fill(cr);
+    cairo_scale(cr, (gdouble)len / w, 1.0);
 
     /* TODO: use cairo scale instead of calculating scale factor manually ?*/
     scale = this->player->current->length / w;

@@ -13,11 +13,16 @@
 
 #include "../include/player.h"
 
+/**
+ * Counter widget
+ *
+ * displays the current time position in player
+ */
 typedef struct {
-    GtkWidget* box;
-    GtkWidget* label;
-    Player* player;
-    gdouble position;
+    GtkWidget* box;             /**< top-level widget */
+    GtkWidget* label;           /**< the actual counter text */
+    Player* player;             /**< the object for whom the counter counts */
+    gdouble position;           /**< the last updated time posion */
 } Counter;
 
 /**
@@ -34,6 +39,8 @@ extern Counter* counter_new(Player* player);
 * update timeline
 *
 * call to notify timeline should update itself
+* new position will be queried from player
+*
 * @param this the timeline object
 */
 extern void counter_update(Counter* this);

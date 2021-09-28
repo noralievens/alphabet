@@ -20,6 +20,9 @@
 
 #include "../include/transport.h"
 
+/*
+ * button eventlisteners
+ */
 
 static void on_clicked_forward(UNUSED GtkWidget *button, Transport* this);
 
@@ -105,11 +108,11 @@ Transport* transport_new(Player* player)
 
 void transport_update(Transport* this)
 {
-    if (this->player->rtn && !this->player->marker) {
+    if (this->player->rtn && this->player->marker == 0.0) {
         gtk_widget_show(this->rtn);
         gtk_widget_hide(this->ctd);
         gtk_widget_hide(this->mark);
-    } else if (this->player->marker) {
+    } else if (this->player->marker != 0.0) {
         gtk_widget_hide(this->rtn);
         gtk_widget_hide(this->ctd);
         gtk_widget_show(this->mark);
@@ -119,7 +122,7 @@ void transport_update(Transport* this)
         gtk_widget_hide(this->mark);
     }
 
-    if (this->player->loop_start && this->player->loop_stop) {
+    if (this->player->loop_start != 0.0 && this->player->loop_stop != 0.0) {
         gtk_widget_show(this->loop);
         gtk_widget_hide(this->noloop);
     } else {
@@ -174,7 +177,7 @@ void on_clicked_stop(UNUSED GtkWidget *button, Transport* this)
 
 void on_clicked_rtn(UNUSED GtkWidget *button, UNUSED Transport* this)
 {
-    if (!this->player->marker) this->player->rtn = !this->player->rtn;
+    if (this->player->marker == 0.0) this->player->rtn = !this->player->rtn;
     this->player->marker = 0;
     transport_update(this);
 }

@@ -39,7 +39,6 @@ extern Timeline* timeline_new(Player* player);
 */
 extern void timeline_update(Timeline* this);
 
-
 /**
  * Free all resources
  *

@@ -12,7 +12,7 @@ A waveform showing the sort-term loudness over a 400ms window is displayed in
 the timeline.\
 Tracks can be sorted or manually sorted.
 
-<img src="screenshot.png" alt="screenshot" width="400"/>
+<p align="center"> <img src="screenshot.png" alt="screenshot" width="400"/> </p>
 
 [manual](doc/alphabet.md)
 

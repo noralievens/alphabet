@@ -47,13 +47,11 @@ endif
 ################################################################################
 # Desktop entry (csv) - optionally add local options (Key=value)
 #
-DESKTOP_TERM    =false
-DESKTOP_KEY     =$(TARGET);media;player;audio;
-DESKTOP_MIME    =application/ogg;application/x-ogg;audio/aac;audio/x-aac;\
-				 audio/wav;audio/flac;audio/aiff;audio/x-aiff;audio/m4a;\
-				 audio/x-m4a;
-DESKTOP_CAT     =Audio;Player;
+DESKTOP_TERM    = false
+DESKTOP_KEY     = $(TARGET);media;player;audio;
+DESKTOP_CAT     = Audio;Player;
 DESKTOP_LOCAL   =
+DESKTOP_MIME    = application/ogg;application/x-ogg;audio/aac;audio/x-aac;audio/wav;audio/flac;audio/aiff;audio/x-aiff;audio/m4a;audio/x-m4a;
 
 
 ################################################################################

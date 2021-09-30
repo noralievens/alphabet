@@ -49,7 +49,8 @@ MAN_DIR         = $(DATA_DIR)/man
 MAN_SECTION     = man1
 DOC_DIR         = doc
 DESKTOP_DIR     = $(DATA_DIR)/applications
-ICON_DIR        = $(DATA_DIR)/icons
+ICON_DIR        = $(DATA_DIR)/icons/hicolor/256x256/apps
+ICON_NAME       = $(TARGET).png
 
 
 ################################################################################
@@ -71,7 +72,7 @@ Type=Application
 Version=$(VERSION)
 Name=$(NAME)
 Comment=$(DESCRIPTION)
-Exec=$(TARGET) %U
+Exec=$(TARGET) %F
 Icon=$(TARGET)
 Terminal=$(DESKTOP_TERM)
 Keywords=$(DESKTOP_KEY)
@@ -208,7 +209,7 @@ install: desktop man all
 	            $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	chmod 644   $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
 	mkdir -pv   $(PREFIX)/$(ICON_DIR)
-	cp -rfv     $(ICON_DIR)/$(TARGET) \
+	cp -rfv     $(ICON_DIR)/$(ICON_NAME) \
 	            $(PREFIX)/$(ICON_DIR)
 ifeq ($(OS),Linux)
 	mkdir -pv   $(PREFIX)/$(DESKTOP_DIR)
@@ -220,7 +221,7 @@ endif
 uninstall:
 	rm -fv      $(PREFIX)/$(BIN_DIR)/$(TARGET)
 	rm -fv      $(PREFIX)/$(MAN_DIR)/$(MAN_SECTION)/$(TARGET).1
-	rm -frv     $(PREFIX)/$(ICON_DIR)/$(TARGET)
+	rm -frv     $(PREFIX)/$(ICON_DIR)/$(ICON_NAME)
 ifeq ($(OS),Linux)
 	rm -fr      $(PREFIX)/$(DESKTOP_DIR)/$(TARGET).desktop
 endif
@@ -240,20 +241,20 @@ appimg: install
 	mv -v       *.AppImage $(DIST_DIR)/
 	@printf "\e[0;32m%s\e[0m\n" "built $(APPIMG_PKG)"
 
-$(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(TARGET)/$(TARGET).png
+$(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(ICON_NAME)
 	rm -rf      $(MAC_DIR)/$(NAME).iconset
 	mkdir -pv   $(MAC_DIR)/$(NAME).iconset
 	mkdir -pv   $(MAC_DIR)/Contents/Resources/
-	sips -z 16 16     $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_16x16.png
-	sips -z 32 32     $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_16x16@2x.png
-	sips -z 32 32     $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_32x32.png
-	sips -z 64 64     $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_32x32@2x.png
-	sips -z 128 128   $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_128x128.png
-	sips -z 256 256   $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_128x128@2x.png
-	sips -z 256 256   $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_256x256.png
-	sips -z 512 512   $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_256x256@2x.png
-	sips -z 512 512   $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_512x512.png
-	sips -z 1024 1024 $(ICON_DIR)/$(TARGET)/$(TARGET).png --out $(APP_ICON)/icon_512x512@2x.png
+	sips -z 16 16     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_16x16.png
+	sips -z 32 32     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_16x16@2x.png
+	sips -z 32 32     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_32x32.png
+	sips -z 64 64     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_32x32@2x.png
+	sips -z 128 128   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_128x128.png
+	sips -z 256 256   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_128x128@2x.png
+	sips -z 256 256   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_256x256.png
+	sips -z 512 512   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_256x256@2x.png
+	sips -z 512 512   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_512x512.png
+	sips -z 1024 1024 $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_512x512@2x.png
 	iconutil -c icns -o $(MAC_DIR)/Contents/Resources/$(NAME).icns $(APP_ICON)
 	rm -rv      $(MAC_DIR)/$(NAME).iconset
 

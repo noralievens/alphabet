@@ -1,6 +1,7 @@
 dist/alphabet.deb
 dist/Alphabet.app
 *.dmg
+share/applications/alphabet.desktop
 
 bin/
 build/

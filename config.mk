@@ -3,6 +3,13 @@
 # @date         : 24/09/2021
 # @file         : config.mk
 # @copyright    : Copyright (c) 2021 Arno Lievens
+#
+TARGET          = alphabet
+NAME            = Alphabet
+DESCRIPTION     = "Music player"
+VERSION         = 0.11
+AUTHOR          = arnolievens@gmail.com
+DATE            = 08/09/2021
 
 OS              = $(shell sh -c 'uname 2> /dev/null || echo Unknown_OS')
 
@@ -31,10 +38,22 @@ endif
 ################################################################################
 # Cflags
 #
-CFLAGS         += "-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
+CFLAGS         += -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED
 ifeq ($(OS),Darwin)
     CFLAGS     += -DMAC_INTEGRATION
 endif
+
+
+################################################################################
+# Desktop entry (csv) - optionally add local options (Key=value)
+#
+DESKTOP_TERM    =false
+DESKTOP_KEY     =$(TARGET);media;player;audio;
+DESKTOP_MIME    =application/ogg;application/x-ogg;audio/aac;audio/x-aac;\
+				 audio/wav;audio/flac;audio/aiff;audio/x-aiff;audio/m4a;\
+				 audio/x-m4a;
+DESKTOP_CAT     =Audio;Player;
+DESKTOP_LOCAL   =
 
 
 ################################################################################

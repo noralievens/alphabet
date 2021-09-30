@@ -4,21 +4,14 @@
 # @file         : Makefile
 # @copyright    : Copyright (c) 2021 Arno Lievens
 #
-TARGET          = alphabet
-NAME            = Alphabet
-DESCRIPTION     = audioplayer
-VERSION         = 0.11
-AUTHOR          = arnolievens@gmail.com
-DATE            = 08/09/2021
 CONFIG          = config.mk
-
 include $(CONFIG)
 
 ################################################################################
 # Build
 #
-SOURCES         = $(shell find $(SRC_DIR) -name *.c)
-HEADERS         = $(shell find $(INC_DIR) -name *.h)
+SOURCES         = $(shell find "$(SRC_DIR)" -name *.c)
+HEADERS         = $(shell find "$(INC_DIR)" -name *.h)
 OBJECTS         = $(addprefix $(BUILD_DIR)/,$(notdir $(SOURCES:.c=.o)))
 LIBS           +=
 INCLUDES       +=
@@ -67,11 +60,35 @@ DOXY_DIR        = doxy
 
 
 ################################################################################
+# Desktop entry
+#
+#
+DESKTOP_ENTRY   = $(DESKTOP_DIR)/$(TARGET).desktop
+
+define DESKTOP_ENTRY_CONTENT
+[Desktop Entry]
+Type=Application
+Version=$(VERSION)
+Name=$(NAME)
+Comment=$(DESCRIPTION)
+Exec=$(TARGET) %U
+Icon=$(TARGET)
+Terminal=$(DESKTOP_TERM)
+Keywords=$(DESKTOP_KEY)
+MimeType=$(DESKTOP_MIME)
+Categories=$(DESKTOP_CAT)
+$(DESKTOP_LOCAL)
+endef
+export DESKTOP_ENTRY_CONTENT
+
+
+################################################################################
 # Debian .deb
 #
 DEB_PKG         = $(DIST_DIR)/$(TARGET).deb
 deb: PREFIX     = $(DIST_DIR)/$(TARGET)/usr/local
-deb: SIZE       = $(shell du -s $(DIST_DIR)/$(TARGET) | cut -f 1)
+deb: SIZE       = $(shell [ -d "$(DIST_DIR)/$(TARGET)" ] && \
+	               du -s "$(DIST_DIR)/$(TARGET)" | cut -f 1)
 
 define DEBIAN_CONTROL
 Package: $(TARGET)
@@ -110,6 +127,7 @@ define GIT_IGNORE
 $(DEB_PKG)
 $(APP_PKG)
 *.dmg
+$(DESKTOP_ENTRY)
 
 $(BIN_DIR)/
 $(BUILD_DIR)/
@@ -128,7 +146,7 @@ export GIT_IGNORE
 ################################################################################
 # Targets
 #
-.PHONY: all init ctags gitignore man doxy install uninstall deb app apt brew clean
+.PHONY: all init ctags gitignore man doxy desktop install uninstall deb app apt brew clean
 
 all: $(BIN_DIR)/$(TARGET)
 
@@ -175,7 +193,12 @@ doxy:
 	doxygen $(DOXY_CFG)
 	@printf "\e[0;32m%s\e[0m\n" "generated doxygen docs in ./$(DOXY_DIR)"
 
-install: all man
+desktop:
+	mkdir -pv   $(DESKTOP_DIR)
+	echo "$$DESKTOP_ENTRY_CONTENT" > $(DESKTOP_ENTRY)
+	@printf "\e[0;32m%s\e[0m\n" "updated desktop entry in $(DESKTOP_DIR)"
+
+install: desktop man all
 	mkdir -pv   $(PREFIX)/$(BIN_DIR)
 	cp -fv      $(BIN_DIR)/$(TARGET) \
 	            $(PREFIX)/$(BIN_DIR)/$(TARGET)
@@ -279,6 +302,7 @@ help:
 	@echo '  gitignore   create default .gitignore file'
 	@echo '  man         convert doc/$(TARGET).md to manpage'
 	@echo '  doxy        build doxygen documentation'
+	@echo '  desktop     build desktop entry'
 	@echo '  install     install in $(PREXIF)'
 	@echo '  uninstall   uninstall from $(PREXIF)'
 	@echo '  deb         builb .deb package'

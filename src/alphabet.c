@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
                             | G_APPLICATION_REPLACE
                             | G_APPLICATION_HANDLES_OPEN;
 
-    alphabet = gtk_application_new("org.gtk.alphabet", flags);
+    alphabet = gtk_application_new(ID, flags);
 
     g_signal_connect(alphabet, "startup", G_CALLBACK(on_startup), NULL);
     g_signal_connect(alphabet, "open", G_CALLBACK(on_open), NULL);

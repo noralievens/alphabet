@@ -17,7 +17,7 @@ LIBS           +=
 INCLUDES       +=
 
 CC              = gcc
-CFLAGS          = -DVERSION=\"$(VERSION)\"
+CFLAGS          = -DVERSION=\"$(VERSION)\" -DID=\"$(ID)\"
 # CFLAGS           += -DDEBUG -g
 CFLAGS         += -std=gnu11 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
@@ -49,8 +49,8 @@ MAN_DIR         = $(DATA_DIR)/man
 MAN_SECTION     = man1
 DOC_DIR         = doc
 DESKTOP_DIR     = $(DATA_DIR)/applications
-ICON_DIR        = $(DATA_DIR)/icons/hicolor/256x256/apps
-ICON_NAME       = $(TARGET).png
+ICON_DIR        = $(DATA_DIR)/icons/hicolor/scalable/apps
+ICON_NAME       = $(ID).svg
 
 
 ################################################################################
@@ -73,7 +73,7 @@ Version=$(VERSION)
 Name=$(NAME)
 Comment=$(DESCRIPTION)
 Exec=$(TARGET) %F
-Icon=$(TARGET)
+Icon=$(ID)
 Terminal=$(DESKTOP_TERM)
 Keywords=$(DESKTOP_KEY)
 MimeType=$(DESKTOP_MIME)

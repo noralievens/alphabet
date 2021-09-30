@@ -7,6 +7,7 @@
 TARGET          = alphabet
 NAME            = Alphabet
 DESCRIPTION     = "Music player"
+ID              = org.arnolievens.alphabet
 VERSION         = 0.11
 AUTHOR          = arnolievens@gmail.com
 DATE            = 08/09/2021

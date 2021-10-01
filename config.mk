@@ -40,10 +40,15 @@ endif
 # Cflags
 #
 CFLAGS         += -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED
+CFLAGS         += -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined
 ifeq ($(OS),Darwin)
     CFLAGS     += -DMAC_INTEGRATION
 endif
 
+################################################################################
+# Cflags
+#
+LDFLAGS        += -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined
 
 ################################################################################
 # Desktop entry (csv) - optionally add local options (Key=value)

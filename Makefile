@@ -17,19 +17,17 @@ LIBS           +=
 INCLUDES       +=
 
 CC              = gcc
-CFLAGS          = -DVERSION=\"$(VERSION)\" -DID=\"$(ID)\"
-# CFLAGS           += -DDEBUG -g
+CFLAGS         += -DVERSION=\"$(VERSION)\" -DID=\"$(ID)\"
+CFLAGS         += -DDEBUG -g
 CFLAGS         += -std=gnu11 -pedantic -Wextra -Wall -Wundef -Wshadow
 CFLAGS         += -Wpointer-arith -Wcast-align -Wstrict-prototypes
 CFLAGS         += -Wstrict-overflow=5 -Wwrite-strings
 CFLAGS         += -Wswitch-default
 CFLAGS         += -Wunreachable-code
 CFLAGS         += -Wdiscarded-qualifiers -Wcast-qual
+CFLAGS         += -Wconversion
 
-# CFLAGS         += -Wno-unused-parameter
-# CFLAGS         += -Wno-unused-variable
-# CFLAGS           += -Wswitch-enum
-CFLAGS           += -Wconversion
+LDFLAGS        +=
 
 CTAGS           = ctags
 CTAGSFLAGS      =
@@ -157,7 +155,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 
 $(BIN_DIR)/$(TARGET): $(OBJECTS)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(OBJECTS) -o $@ -I$(INCLUDES) $(LIBS)
+	$(CC) $(OBJECTS) -o $@ -I$(INCLUDES) $(LIBS) $(LDFLAGS)
 
 ctags: $(HEADERS) $(SOURCES)
 	$(CTAGS) $(CTAGSFLAGS) $(HEADERS) $(SOURCES)

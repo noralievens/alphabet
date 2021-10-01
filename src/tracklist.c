@@ -465,7 +465,7 @@ void tracklist_free(Tracklist* this)
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
     g_signal_handlers_disconnect_by_data(selection, this);
-    gtk_tree_selection_get_selected(selection, &model, &iter);
+    gtk_tree_model_get_iter_first(model, &iter);
 
     while (gtk_list_store_iter_is_valid(this->list, &iter)) {
         gtk_tree_model_get(model, &iter, TRACKLIST_COLUMN_DATA, &track, -1);
@@ -476,8 +476,8 @@ void tracklist_free(Tracklist* this)
     this->player->current = NULL;
 
     g_thread_pool_free(this->load_thread, FALSE, FALSE);
-    gtk_widget_destroy(GTK_WIDGET(this->tree));
     g_object_unref(this->list);
+    gtk_widget_destroy(GTK_WIDGET(this->tree));
     g_free(this);
 }
 

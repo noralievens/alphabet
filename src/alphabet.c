@@ -35,6 +35,7 @@ Timeline* timeline;
 Tracklist* tracklist;
 Transport* transport;
 Varispeed* varispeed;
+GtkWidget* button;
 
 /**
  * activate callback
@@ -114,6 +115,9 @@ gboolean keypress_handler(GtkWidget *window, GdkEventKey *event)
 {
     switch (event->keyval) {
 
+        case GDK_KEY_f:
+            return TRUE;
+
         case GDK_KEY_Delete:
             tracklist_remove_selected(tracklist);
             return TRUE;
@@ -173,8 +177,8 @@ void event_callback(gpointer data)
 
 void on_activate(GtkApplication* alphabet)
 {
-    GtkWidget* window, * box, *scrolled;
-    GtkWidget* bar, * button;
+    GtkWidget* window, * box, * scrolled;
+    GtkWidget* bar;//, * button;
 
 #ifdef MAC_INTEGRATION
     GtkosxApplication* osx = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
@@ -186,6 +190,11 @@ void on_activate(GtkApplication* alphabet)
     gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_X, WINDOW_Y);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
+    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
+    g_signal_connect(window, "key_press_event",
+            G_CALLBACK(keypress_handler), NULL);
+    g_signal_connect(window, "destroy",
+            G_CALLBACK(on_destroy), alphabet);
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
@@ -203,10 +212,9 @@ void on_activate(GtkApplication* alphabet)
 
     button = gtk_button_new_from_icon_name("list-add-symbolic", ICON_SIZE);
     gtk_action_bar_pack_start(GTK_ACTION_BAR(bar), button);
+    gtk_widget_show_all(button);
     g_signal_connect_swapped(button, "clicked",
             G_CALLBACK(on_click_add), window);
-
-    gtk_widget_show_all(button);
 
     counter = counter_new(player);
     gtk_action_bar_pack_start(GTK_ACTION_BAR(bar), counter->box);
@@ -220,12 +228,6 @@ void on_activate(GtkApplication* alphabet)
     transport = transport_new(player);
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), transport->box_control);
     gtk_action_bar_pack_end(GTK_ACTION_BAR(bar), transport->box_movement);
-
-    gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-    g_signal_connect(window, "key_press_event",
-            G_CALLBACK(keypress_handler), NULL);
-    g_signal_connect(window, "destroy",
-            G_CALLBACK(on_destroy), alphabet);
 
     /* event_callback will be called whenever player received event */
     player_set_event_callback(player, event_callback);

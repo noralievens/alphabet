@@ -103,6 +103,7 @@ Tracklist* tracklist_new(Player* player)
     Tracklist* this = malloc(sizeof(Tracklist));
     this->player = player;
     this->min_lufs = 0.0;
+    this->tree = NULL;
 
     this->list = gtk_list_store_new(TRACKLIST_COLUMNS,
                                     G_TYPE_STRING,      /* NAME */
@@ -137,6 +138,8 @@ void tracklist_init(Tracklist* this)
     GtkCellRenderer* cellrender;
     TracklistColum id;
     GtkTreeModel* model = GTK_TREE_MODEL(this->list);
+
+    assert(this->tree == NULL && "tracklist already initialized)");
 
     this->tree = GTK_TREE_VIEW(gtk_tree_view_new_with_model(model));
 
@@ -452,10 +455,10 @@ void tracklist_free(Tracklist* this)
 {
     if (!this) return;
 
-    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
     Track* track;
     GtkTreeIter iter;
     GtkTreeSelection* selection;
+    GtkTreeModel* model = GTK_TREE_MODEL(this->list);
 
     /* free each track contained in tracklist before destroying ourselves
      * we must first disconnect the selction signal handler or tracklist will
@@ -463,8 +466,11 @@ void tracklist_free(Tracklist* this)
      * the next track
      */
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
-    g_signal_handlers_disconnect_by_data(selection, this);
+    if (this->tree) {
+        selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(this->tree));
+        g_signal_handlers_disconnect_by_data(selection, this);
+    }
+
     gtk_tree_model_get_iter_first(model, &iter);
 
     while (gtk_list_store_iter_is_valid(this->list, &iter)) {
@@ -473,11 +479,14 @@ void tracklist_free(Tracklist* this)
         gtk_list_store_remove(this->list, &iter);
     }
 
-    this->player->current = NULL;
+    if (this->player) this->player->current = NULL;
 
     g_thread_pool_free(this->load_thread, FALSE, FALSE);
     g_object_unref(this->list);
-    gtk_widget_destroy(GTK_WIDGET(this->tree));
+    if (this->tree) {
+
+        gtk_widget_destroy(GTK_WIDGET(this->tree));
+    }
     g_free(this);
 }
 

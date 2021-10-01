@@ -5,6 +5,9 @@
 
 ### general
 - decent icon
+- use shutdown signal? (https://developer.gnome.org/documentation/tutorials/application.html)
+- comandline options (--version) (https://developer.gnome.org/documentation/tutorials/application.html#Dealing%20with%20the%20command%20line)
+- transport in buttonbox?
 
 ### build
 - update dekstop entry (and kutplist) in makefile?

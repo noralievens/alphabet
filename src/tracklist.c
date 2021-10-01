@@ -102,6 +102,7 @@ Tracklist* tracklist_new(Player* player)
     GError* err = NULL;
     Tracklist* this = malloc(sizeof(Tracklist));
     this->player = player;
+    this->min_lufs = 0.0;
 
     this->list = gtk_list_store_new(TRACKLIST_COLUMNS,
                                     G_TYPE_STRING,      /* NAME */
@@ -288,7 +289,6 @@ GtkTreeViewDropPosition pos)
                 gtk_list_store_insert_after(this->list, &iter, &prev);
         }
     } else {
-        gtk_tree_path_free(path);
         gtk_list_store_append(this->list, &iter);
     }
     gtk_list_store_set(

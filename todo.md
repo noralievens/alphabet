@@ -2,6 +2,7 @@
 - auto-align
 - open directory (stupid? recursive?)
 - dnd macos
+- varispeed/time-stretch
 
 ### general
 - better icon

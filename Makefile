@@ -240,21 +240,9 @@ appimg: install
 	@printf "\e[0;32m%s\e[0m\n" "built $(APPIMG_PKG)"
 
 $(MAC_DIR)/$(APPNAME).icns: $(ICON_DIR)/$(ICON_NAME)
-	rm -rf      $(MAC_DIR)/$(NAME).iconset
-	mkdir -pv   $(MAC_DIR)/$(NAME).iconset
-	mkdir -pv   $(MAC_DIR)/Contents/Resources/
-	sips -z 16 16     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_16x16.png
-	sips -z 32 32     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_16x16@2x.png
-	sips -z 32 32     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_32x32.png
-	sips -z 64 64     $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_32x32@2x.png
-	sips -z 128 128   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_128x128.png
-	sips -z 256 256   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_128x128@2x.png
-	sips -z 256 256   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_256x256.png
-	sips -z 512 512   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_256x256@2x.png
-	sips -z 512 512   $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_512x512.png
-	sips -z 1024 1024 $(ICON_DIR)/$(ICON_NAME) --out $(APP_ICON)/icon_512x512@2x.png
-	iconutil -c icns -o $(MAC_DIR)/Contents/Resources/$(NAME).icns $(APP_ICON)
-	rm -rv      $(MAC_DIR)/$(NAME).iconset
+	svg2icns    $<
+	mv -v       $(ICON_NAME:.svg=.icns) \
+	            $(MAC_DIR)/Contents/Resources/$(TARGET).icns
 
 app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 	rm -fr      $(APP_PKG)

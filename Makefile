@@ -261,6 +261,7 @@ app: $(MAC_DIR)/$(APPNAME).icns $(BIN_DIR)/$(TARGET)
 
 brew:
 	brew install $(BREW_DEPS)
+	@echo "please install svg2icns https://github.com/magnusviri/svg2icns.git"
 	@printf "\e[0;32m%s\e[0m\n" "homebrew installed dependencies"
 
 apt:
